@@ -12,6 +12,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     crane.url = "github:ipetkov/crane";
+
+    #[ Dev ]
+    tomet.url = "git+https://github.com/tomet-lang/tomet.git";
   };
 
   outputs = inputs: import ./nix inputs;

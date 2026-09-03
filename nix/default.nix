@@ -26,6 +26,7 @@ flake-parts.lib.mkFlake { inherit inputs; } {
       devShells.default = pkgs.callPackage ./dev.nix {
         inherit inputs craneLib;
         twrit = pkgs.callPackage ./pkgs/twrit.nix { inherit craneLib; };
+        tomet = inputs.tomet.packages.${pkgs.system}.tomet;
       };
 
       treefmt = import ./formatter.nix;

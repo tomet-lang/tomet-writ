@@ -5,6 +5,7 @@
   mkShell,
 
   twrit,
+  tomet,
   ...
 }:
 let
@@ -24,6 +25,7 @@ in
 mkShell rec {
   buildInputs = with pkgs; [
     twrit
+    tomet
 
     #[ CMake ]
     cmake

@@ -3,4 +3,8 @@ name = "twrit-cli"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "twrit"
+path = "src/main.rs"
+
 [dependencies]

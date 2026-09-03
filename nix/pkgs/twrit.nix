@@ -18,7 +18,7 @@ craneLib.buildPackage (
   // {
     inherit cargoArtifacts;
 
-    cargoExtraArgs = "-p twrit";
+    cargoExtraArgs = "-p twrit-cli";
 
     doCheck = true;
   }
