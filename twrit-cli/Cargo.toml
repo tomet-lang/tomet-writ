@@ -1,0 +1,6 @@
+[package]
+name = "twrit-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]

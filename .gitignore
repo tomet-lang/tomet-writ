@@ -1,0 +1,36 @@
+# -----------------------------------------------------------------------
+# Files ignored by Git.
+#
+# Keep project-specific ignore rules in subdirectories whenever possible.
+# -----------------------------------------------------------------------
+
+# -----------------------------------------------------------------------
+
+#[ Test output ]
+# Actual snapshot output, written only when it differs from tests/ref/.
+tests/store/
+
+#[ Build file ]
+build/
+dist/
+package/
+result
+result-*
+target/
+
+#[ Dev ]
+.direnv/
+.claude/
+.cargo/
+.idea/
+.zed/
+
+#[ User's variable ]
+.env
+.env.*
+!.env.example
+
+#[ OS ]
+.DS_Store
+Desktop.ini
+Thumbs.db
