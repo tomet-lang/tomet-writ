@@ -49,6 +49,35 @@ There is deliberately no `@invariant(...)`-style notation yet. The shape of
 a rule declaration should be decided once several guards exist and the
 repetition is obvious, not from a sample of one.
 
+## What belongs in this tool
+
+`twrit` implements rule **kinds**. The writ supplies the **parameters**.
+
+`crate-layering` is the shape to copy: this crate knows "members belong to
+layers, and a layer may not depend upward", and nothing else. Which
+directories, and in what order, is `@layers` data inside the writ. Another
+repository writes its own `@layers` and the same code enforces it.
+
+The failure to avoid is a rule that only makes sense for one repository.
+The moment a crate name, a directory, or an API string is written in *this*
+crate's source rather than read from a writ, `twrit` has stopped being a
+tool and become tomet's project manager, and there is no line left to stop
+the next one.
+
+So: **a rule that cannot be written down as data does not belong here.**
+It belongs in the repository's own test suite, or behind a command that
+repository already ships.
+
+`tomet`'s writs show both sides. `crate-layering` and `parser-purity` are
+data, so they live here. `no-vocabulary` is "parse two sources differing in
+one identifier and compare the trees" -- there is no way to express that as
+parameters, so it stays in `tests/src/vocabulary.rs`. `kind-not-meta-type`
+and `generated-md-not-edited` are guarded by `tomet refactor --check` and
+`tomet export --check`, which are that project's own tools.
+
+None of those three are worse off for living elsewhere. A guard belongs
+next to the thing it can actually check.
+
 ## Language
 
 Write code comments and documentation in English. Do not use Japanese in

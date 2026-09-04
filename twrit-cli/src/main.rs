@@ -6,6 +6,7 @@
 //! than drifting quietly out of true.
 
 mod layering;
+mod purity;
 mod writ;
 
 use std::path::PathBuf;
@@ -51,20 +52,25 @@ fn run(path: &std::path::Path) -> anyhow::Result<usize> {
         return Ok(0);
     }
 
-    let violations = layering::check(&writs, path)?;
+    let rules: [(&str, Vec<String>); 2] = [
+        ("crate-layering", layering::check(&writs, path)?),
+        ("parser-purity", purity::check(&writs, path)?),
+    ];
 
-    for violation in &violations {
-        println!("crate-layering: {violation}");
+    let mut total = 0;
+    for (name, violations) in &rules {
+        for violation in violations {
+            println!("{name}: {violation}");
+        }
+        total += violations.len();
     }
 
-    if violations.is_empty() {
-        println!(
-            "{} writ(s), crate-layering: ok",
-            writs.len()
-        );
+    if total == 0 {
+        let names: Vec<&str> = rules.iter().map(|(name, _)| *name).collect();
+        println!("{} writ(s), {}: ok", writs.len(), names.join(", "));
     } else {
-        println!("crate-layering: {} violation(s)", violations.len());
+        println!("{total} violation(s)");
     }
 
-    Ok(violations.len())
+    Ok(total)
 }
