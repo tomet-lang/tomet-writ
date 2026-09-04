@@ -1,0 +1,4 @@
+[net]
+# The tomet repository is on a private Forgejo over SSH; cargo's built-in
+# libgit2 fetcher cannot use the local SSH agent, so shell out to `git`.
+git-fetch-with-cli = true

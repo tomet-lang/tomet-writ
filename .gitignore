@@ -22,6 +22,11 @@ target/
 .direnv/
 .claude/
 .cargo/
+# ...but this one is required to build: the tomet dependency lives on a
+# private Forgejo over SSH, and cargo's built-in libgit2 fetcher cannot
+# authenticate against it.
+!.cargo/
+!.cargo/config.toml
 .idea/
 .zed/
 

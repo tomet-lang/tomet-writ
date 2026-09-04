@@ -8,3 +8,10 @@ name = "twrit"
 path = "src/main.rs"
 
 [dependencies]
+anyhow = "1.0.104"
+cargo_metadata = "0.23.1"
+clap = { version = "4.6.6", features = ["derive"] }
+ignore = "0.4.33"
+tomet-ast = { git = "https://github.com/tomet-lang/tomet.git", version = "0.1.0" }
+tomet-parser = { git = "https://github.com/tomet-lang/tomet.git", version = "0.1.0" }
+tomet-tree = { git = "https://github.com/tomet-lang/tomet.git", version = "0.1.0" }
