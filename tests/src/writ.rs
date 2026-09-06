@@ -37,11 +37,16 @@ fn a_directory_with_no_writ_is_not_a_failure() {
 fn a_parse_error_names_the_file_and_the_position() {
     // The path, because a repository has many writs and the walker found
     // this one; the position, because the author has to go and fix it.
+    //
+    // Both halves come from `tomet-load` now rather than from a parse
+    // call here, so this also pins that the reason survives the error
+    // chain exactly once -- `LoadError` says where and `source` says
+    // what, and neither repeats the other.
     let dir = twrit_tests::fixture("unparseable");
     assert_eq!(
         twrit_tests::check_err("unparseable"),
         format!(
-            "{}/.writ.tmt: parse error: 10:8: unterminated '{{', expected '}}'",
+            "failed to parse {}/.writ.tmt: 19:1: expected '}}'",
             dir.display()
         )
     );

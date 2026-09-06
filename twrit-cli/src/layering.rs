@@ -1,6 +1,6 @@
 //! The `crate-layering` guard.
 //!
-//! Two checks over one `@layers` declaration:
+//! Two checks over one `layers` declaration:
 //!
 //! 1. **Exhaustiveness** -- every workspace member matches exactly one
 //!    layer. This is the half that catches a rule that was never written,
@@ -19,7 +19,7 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
 
-use crate::writ::{Writ, string_list_map};
+use crate::writ::{Rule, Writ, string_list_map, twrit_rules};
 use crate::{Outcome, plural};
 
 /// The layer a pattern list was declared under, lowest number first.
@@ -32,22 +32,26 @@ struct Layers {
 }
 
 impl Layers {
-    fn read(writ: &Writ) -> Result<Self> {
-        let el = writ
-            .element("layers")
-            .with_context(|| format!("{}: no `@layers` declaration", writ.path.display()))?;
+    fn read(rule: &Rule) -> Result<Self> {
+        let declared = rule.map("layers").with_context(|| {
+            format!(
+                "{}: `@rule({})` guards `layers` but declares no `layers:` parameter",
+                rule.path.display(),
+                rule.id
+            )
+        })?;
 
         let mut patterns = Vec::new();
-        for (key, globs) in string_list_map(el, "`@layers`")? {
+        for (key, globs) in string_list_map(declared, "`layers`")? {
             let layer: u32 = key
                 .parse()
-                .with_context(|| format!("`@layers` key `{key}` is not a layer number"))?;
+                .with_context(|| format!("`layers` key `{key}` is not a layer number"))?;
             for glob in globs {
                 patterns.push((layer, glob));
             }
         }
 
-        anyhow::ensure!(!patterns.is_empty(), "`@layers` declares no members");
+        anyhow::ensure!(!patterns.is_empty(), "`layers` declares no members");
         let floor = patterns.iter().map(|(l, _)| *l).min().expect("non-empty");
 
         Ok(Layers { patterns, floor })
@@ -74,18 +78,19 @@ impl Layers {
 /// Runs the guard against the workspace whose manifest is at
 /// `workspace_root/Cargo.toml`.
 ///
-/// `Outcome::NotDeclared` when no writ carries `@layers` -- not an empty
+/// `Outcome::NotDeclared` when no rule guards `layers` -- not an empty
 /// violation list, which would be indistinguishable from a workspace
 /// whose every edge runs the right way.
 pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
-    let Some(writ) = writs.iter().find(|w| w.element("layers").is_some()) else {
-        return Ok(Outcome::NotDeclared);
+    let rules = twrit_rules(writs, "layers")?;
+    let [rule] = rules.as_slice() else {
+        if rules.is_empty() {
+            return Ok(Outcome::NotDeclared);
+        }
+        anyhow::bail!("more than one rule guards `layers`; a layer order has to be one thing");
     };
-    if writs.iter().filter(|w| w.element("layers").is_some()).count() > 1 {
-        anyhow::bail!("more than one writ declares `@layers`; a layer order has to be one thing");
-    }
 
-    let layers = Layers::read(writ)?;
+    let layers = Layers::read(rule)?;
     let metadata = MetadataCommand::new()
         .manifest_path(workspace_root.join("Cargo.toml"))
         .no_deps()
@@ -109,7 +114,7 @@ pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
             };
 
             if dep_layer > own_layer {
-                // Both ends carry their own directory. `@layers` matches on
+                // Both ends carry their own directory. `layers` matches on
                 // the directory rather than the package name, and the two
                 // differ often enough to matter -- `crates/tomet-syntax-parser`
                 // publishes `tomet-parser`. A reader just told about an edge
@@ -172,7 +177,7 @@ fn assign<'a>(
 
         match layers.matches(dir).as_slice() {
             [] => violations.push(format!(
-                "unclassified member: {dir} matches no layer in `@layers`"
+                "unclassified member: {dir} matches no layer in `layers`"
             )),
             [(layer, _)] => {
                 assigned.insert(package.name.as_str(), (*layer, dir));

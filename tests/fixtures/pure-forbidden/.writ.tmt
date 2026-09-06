@@ -4,10 +4,14 @@
 
 ##[ parser-purity ]
 
-@pure{
-  crates: [ "core" ]
-  forbid: [ "std::fs" ]
-  allow-external: [ ]
+@rule(parser-purity){
+  guard: { twrit: pure }
+
+  pure: {
+    crates: [ "core" ]
+    forbid: [ "std::fs" ]
+    allow-external: [ ]
+  }
 }
 
 The other half of the rule: an allowlist stops the ability arriving as a

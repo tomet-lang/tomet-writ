@@ -4,8 +4,12 @@
 
 ##[ crate-layering ]
 
-@layers{
-  low: [ "thing" ]
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    low: [ "thing" ]
+  }
 }
 
 A layer key has to be a number, because the whole rule is an ordering.

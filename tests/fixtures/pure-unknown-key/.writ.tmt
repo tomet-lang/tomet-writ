@@ -4,9 +4,13 @@
 
 ##[ parser-purity ]
 
-@pure{
-  crates: [ "core" ]
-  colour: [ "red" ]
+@rule(parser-purity){
+  guard: { twrit: pure }
+
+  pure: {
+    crates: [ "core" ]
+    colour: [ "red" ]
+  }
 }
 
 A key this tool does not implement is a rule the author believes is being

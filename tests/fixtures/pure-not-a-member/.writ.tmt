@@ -4,10 +4,14 @@
 
 ##[ parser-purity ]
 
-@pure{
-  crates: [ "nope" ]
-  forbid: [ ]
-  allow-external: [ ]
+@rule(parser-purity){
+  guard: { twrit: pure }
+
+  pure: {
+    crates: [ "nope" ]
+    forbid: [ ]
+    allow-external: [ ]
+  }
 }
 
 A rule naming a crate that does not exist is checking nothing, and has to

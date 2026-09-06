@@ -4,8 +4,12 @@
 
 ##[ crate-layering ]
 
-@layers{
-  1: [ 42 ]
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    1: [ 42 ]
+  }
 }
 
 Patterns are directory paths, so every entry has to be a string.

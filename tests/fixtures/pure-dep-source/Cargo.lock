@@ -12,3 +12,23 @@ dependencies = [
 [[package]]
 name = "inner"
 version = "0.1.0"
+
+[[patch.unused]]
+name = "tomet-ast"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "tomet-load"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "tomet-parser"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "tomet-semantics"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "tomet-tree"
+version = "0.1.0"

@@ -8,10 +8,14 @@ Dev-dependencies are exempt. A crate may reach upward in
 `[dev-dependencies]` to get something to test itself against, because
 that says nothing about how the shipped code is arranged.
 
-@layers{
-  2: [ "top" ]
-  1: [ "mid" ]
-  0: [ "base" ]
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    2: [ "top" ]
+    1: [ "mid" ]
+    0: [ "base" ]
+  }
 }
 
 This is `upward-edge` with the one edge moved to `[dev-dependencies]`.

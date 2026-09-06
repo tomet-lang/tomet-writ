@@ -1,19 +1,105 @@
 //! Finding and reading `.writ.tmt` files.
 //!
 //! A writ is an author-owned normative file, one per directory, scoped to
-//! that directory. This module only locates and parses them; deciding what
-//! a given rule means is each guard's own job.
+//! that directory. This module locates them, resolves their names, and
+//! reads each entry's declaration; deciding what a given rule *means* is
+//! each guard's own job.
+//!
+//! Names are resolved through `tomet-load`, not matched by hand. A writ
+//! declares `@kind(writ)`, so `@rule` and `@writ.rule` are two legal
+//! spellings of the same element and `Bindings::classify` maps both to
+//! `writ.rule`. This module used to match a bare `Sigil::Named` instead,
+//! which found the first spelling and silently ignored the second --
+//! and "silently ignored" means the rule stops being checked, which is
+//! the exact failure this tool exists to prevent.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use tomet_ast::{Block, Document, Element, ElementValue, Entry, Sigil, Value};
+use tomet_ast::{Block, Document, Element, ElementValue, Entry, Value};
+use tomet_load::Vault;
+use tomet_semantics::{Bindings, ElementKind};
 
 /// One parsed writ, kept with its path so a violation can name the file the
 /// rule came from rather than just the rule.
 pub struct Writ {
     pub path: PathBuf,
     pub doc: Document,
+    bindings: Bindings,
+}
+
+/// Who guarantees a rule right now, and nothing else.
+///
+/// The writ holds the rule and the reason; whatever enforces it lives
+/// outside and is only named here. A guard is a pointer, never a program:
+/// an earlier draft put a shell line in the entry, which is a Makefile
+/// wearing prose and would mean reading a `.writ.tmt` could run arbitrary
+/// commands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Guard {
+    /// A rule kind this tool implements. Parameters come from the same
+    /// group.
+    Twrit(String),
+    /// A runner the repository already ships. Recorded, never executed.
+    Runs(String),
+    /// A test in the repository being checked. What can be verified from
+    /// here is that the path still exists -- a dead path means the rule
+    /// quietly stopped being tested.
+    Test(String),
+    /// Nobody, said out loud, with why not.
+    None(String),
+}
+
+impl Guard {
+    fn from_map(entries: &[(String, Value)], id: &str) -> Result<Self> {
+        let [(key, value)] = entries else {
+            anyhow::bail!(
+                "`@rule({id})`'s `guard` holds {} entries; it names exactly one holder",
+                entries.len()
+            );
+        };
+        let text = match value {
+            Value::String(s) => s.clone(),
+            other => anyhow::bail!("`@rule({id})`'s `guard: {key}` is not a string: {other:?}"),
+        };
+        match key.as_str() {
+            "twrit" => Ok(Guard::Twrit(text)),
+            "runs" => Ok(Guard::Runs(text)),
+            "test" => Ok(Guard::Test(text)),
+            "none" if text.trim().is_empty() => anyhow::bail!(
+                "`@rule({id})`'s `guard: none` has no reason; \
+                 an unguarded rule says why, so it cannot be read as an oversight"
+            ),
+            "none" => Ok(Guard::None(text)),
+            other => anyhow::bail!(
+                "`@rule({id})`'s guard holder `{other}` is not one of \
+                 `twrit`, `runs`, `test`, `none`"
+            ),
+        }
+    }
+}
+
+/// One entry: its id, who holds it, and the parameters it declares.
+pub struct Rule {
+    pub id: String,
+    pub guard: Guard,
+    /// Which writ it came from, so a violation can name the file.
+    pub path: PathBuf,
+    group: Vec<Entry>,
+}
+
+impl Rule {
+    /// A nested `key: { ... }` from this rule's own group.
+    ///
+    /// The parameters live inside the entry rather than beside it, which
+    /// is what makes a dropped blank line a parse error instead of a
+    /// declaration nobody owns.
+    pub fn map(&self, key: &str) -> Option<&[(String, Value)]> {
+        self.group.iter().find_map(|entry| match entry {
+            Entry::Pair(k, Value::Map(entries)) if k == key => Some(entries.as_slice()),
+            _ => None,
+        })
+    }
 }
 
 /// Every `.writ.tmt` at or below `root`, in walk order.
@@ -24,6 +110,13 @@ pub struct Writ {
 /// walker treats it as the latter by default, which is precisely how the
 /// tomet repository's own `check-links` came to skip these files.
 pub fn discover(root: &Path) -> Result<Vec<Writ>> {
+    // One vault for the run. Vocabularies are declared by the config that
+    // governs the tree, so they are read once here rather than per writ.
+    let vault = Vault::discover(root);
+    for problem in &vault.vocabulary_errors {
+        eprintln!("warning: {problem}");
+    }
+
     let mut found = Vec::new();
 
     for entry in ignore::WalkBuilder::new(root).hidden(false).build() {
@@ -36,51 +129,111 @@ pub fn discover(root: &Path) -> Result<Vec<Writ>> {
         }
 
         let path = entry.path().to_path_buf();
-        let src = std::fs::read_to_string(&path)
-            .with_context(|| format!("failed to read {}", path.display()))?;
-        let doc = tomet_parser::parse_document(&src)
-            .map_err(|e| anyhow::anyhow!("{}: parse error: {e}", path.display()))?;
+        // `LoadError` already names the path, so this does not prepend it.
+        let (doc, bindings) = vault.document(&path)?;
 
-        found.push(Writ { path, doc });
+        found.push(Writ {
+            path,
+            doc,
+            bindings,
+        });
     }
 
     Ok(found)
 }
 
 impl Writ {
-    /// The first top-level element named `name`, if this writ declares one.
-    ///
-    /// Rules are found by element name rather than by their heading, even
-    /// though the heading is what a reader navigates by. A heading is prose
-    /// and will be reworded; an element name is the part a tool can be held
-    /// to.
-    pub fn element(&self, name: &str) -> Option<&Element> {
-        self.doc.blocks.iter().find_map(|block| match block {
-            Block::Element(el) => match &el.sigil {
-                Sigil::Named(n) if n.namespace.is_none() && n.name == name => Some(el),
+    /// Every `@rule` this writ declares, in document order.
+    pub fn rules(&self) -> Result<Vec<Rule>> {
+        self.doc
+            .blocks
+            .iter()
+            .filter_map(|block| match block {
+                Block::Element(el) if self.is_rule(el) => Some(el),
                 _ => None,
-            },
-            _ => None,
+            })
+            .map(|el| self.read_rule(el))
+            .collect()
+    }
+
+    /// Whether `el` is a `@rule`, by resolution rather than by spelling.
+    ///
+    /// `@rule` and `@writ.rule` are both legal in a `@kind(writ)` document
+    /// and mean the same thing; only `Bindings::classify` knows that.
+    fn is_rule(&self, el: &Element) -> bool {
+        el.sigil
+            .name()
+            .and_then(|name| self.bindings.classify(name).ok())
+            .is_some_and(|kind| kind == ElementKind::Custom("writ.rule".into()))
+    }
+
+    fn read_rule(&self, el: &Element) -> Result<Rule> {
+        let id = match &el.args {
+            Some(Value::String(id)) => id.clone(),
+            Some(other) => anyhow::bail!(
+                "{}: `@rule`'s id is not a bare name: {other:?}",
+                self.path.display()
+            ),
+            None => anyhow::bail!(
+                "{}: a `@rule` carries no id; the heading is prose and cannot serve as one",
+                self.path.display()
+            ),
+        };
+
+        let Some(ElementValue::Group(group)) = &el.value else {
+            anyhow::bail!(
+                "{}: `@rule({id})` has no `{{...}}` group, so it declares neither a guard nor \
+                 parameters",
+                self.path.display()
+            );
+        };
+
+        let guard = group
+            .iter()
+            .find_map(|entry| match entry {
+                Entry::Pair(k, Value::Map(entries)) if k == "guard" => Some(entries.as_slice()),
+                _ => None,
+            })
+            .with_context(|| {
+                format!(
+                    "{}: `@rule({id})` declares no `guard`; \
+                     write `guard: {{ none: \"...\" }}` when nothing holds it yet",
+                    self.path.display()
+                )
+            })?;
+
+        Ok(Rule {
+            id: id.clone(),
+            guard: Guard::from_map(guard, &id)
+                .with_context(|| format!("{}", self.path.display()))?,
+            path: self.path.clone(),
+            group: group.clone(),
         })
     }
 }
 
-/// Reads an element's `{...}` group as `key: [string, ...]` pairs.
+/// Every rule across `writs` whose guard names `kind` as this tool's.
+pub fn twrit_rules(writs: &[Writ], kind: &str) -> Result<Vec<Rule>> {
+    let mut found = Vec::new();
+    for writ in writs {
+        for rule in writ.rules()? {
+            if rule.guard == Guard::Twrit(kind.to_string()) {
+                found.push(rule);
+            }
+        }
+    }
+    Ok(found)
+}
+
+/// Reads a rule parameter's `{...}` as `key: [string, ...]` pairs.
 ///
 /// Returns an error rather than skipping anything it cannot read: a rule
 /// half-understood is worse than a rule that refuses to run, because the
 /// half it dropped is exactly where a violation would hide.
-pub fn string_list_map(el: &Element, what: &str) -> Result<Vec<(String, Vec<String>)>> {
-    let Some(ElementValue::Group(entries)) = &el.value else {
-        anyhow::bail!("{what} has no `{{...}}` group");
-    };
-
+pub fn string_list_map(entries: &[(String, Value)], what: &str) -> Result<Vec<(String, Vec<String>)>> {
     entries
         .iter()
-        .map(|entry| {
-            let Entry::Pair(key, value) = entry else {
-                anyhow::bail!("{what} holds an element where a `key: value` pair was expected");
-            };
+        .map(|(key, value)| {
             let Value::Seq(items) = value else {
                 anyhow::bail!("{what}'s `{key}` is not a list");
             };

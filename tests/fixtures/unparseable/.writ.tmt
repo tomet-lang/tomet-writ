@@ -2,10 +2,17 @@
 
 #[ Writ: unparseable fixture ]
 
-A writ that cannot be parsed at all. The closing `}` is missing, which is
-what dropping a line out of `@layers` looks like.
+A writ that cannot be parsed at all. The closing `}` is missing.
+
+This is what dropping a line out of a rule now looks like: the parameters
+live inside the entry, so losing one takes the group's closer with it and
+the file stops parsing. It used to be possible for a declaration to come
+detached and simply vanish -- see `layers-bare`.
 
 ##[ crate-layering ]
 
-@layers{
-  0: [ "thing" ]
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    0: [ "thing" ]

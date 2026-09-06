@@ -4,6 +4,10 @@
 
 ##[ crate-layering ]
 
-@layers{
-  0: [ "thing" ]
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    0: [ "thing" ]
+  }
 }

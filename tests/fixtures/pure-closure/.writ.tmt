@@ -4,10 +4,14 @@
 
 ##[ parser-purity ]
 
-@pure{
-  crates: [ "core" ]
-  forbid: [ ]
-  allow-external: [ ]
+@rule(parser-purity){
+  guard: { twrit: pure }
+
+  pure: {
+    crates: [ "core" ]
+    forbid: [ ]
+    allow-external: [ ]
+  }
 }
 
 `core` names one dependency and it is internal. The closure is what

@@ -4,8 +4,12 @@
 
 ##[ crate-layering ]
 
-@layers{
-  1: "thing"
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    1: "thing"
+  }
 }
 
 A layer holds a list of patterns. One bare string is a different shape,

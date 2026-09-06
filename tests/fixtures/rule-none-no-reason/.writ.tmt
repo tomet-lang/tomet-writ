@@ -1,0 +1,12 @@
+@kind(writ)
+
+#[ Writ: rule-none-no-reason fixture ]
+
+##[ blueprint-shape ]
+
+@rule(blueprint-shape){
+  guard: { none: "" }
+}
+
+`none` with nothing in it. Saying nobody holds a rule is allowed; saying
+it without saying why is the same silence written down.

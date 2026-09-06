@@ -7,6 +7,10 @@
 A second declaration, in a writ further down. A layer order is a
 property of the workspace, so there can only be one of it.
 
-@layers{
-  0: [ "other" ]
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    0: [ "other" ]
+  }
 }

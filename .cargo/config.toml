@@ -2,3 +2,13 @@
 # The tomet repository is on a private Forgejo over SSH; cargo's built-in
 # libgit2 fetcher cannot use the local SSH agent, so shell out to `git`.
 git-fetch-with-cli = true
+
+# The tomet crates are developed alongside this tool, in the sibling
+# checkout `AGENTS.md` already assumes. Point the git dependency at it so
+# a change there is visible here without a round trip through Forgejo.
+[patch."https://github.com/tomet-lang/tomet.git"]
+tomet-ast    = { path = "../tomet/crates/tomet-syntax-ast" }
+tomet-parser = { path = "../tomet/crates/tomet-syntax-parser" }
+tomet-tree   = { path = "../tomet/crates/tomet-syntax-tree" }
+tomet-semantics = { path = "../tomet/crates/tomet-semantics" }
+tomet-load   = { path = "../tomet/crates/tomet-load" }

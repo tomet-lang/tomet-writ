@@ -4,7 +4,7 @@
 
 ##[ crate-layering ]
 
-@layers
+@rule(crate-layering)
 
 The whole declaration, written without its `{...}`. This is a realistic
 mistake -- the heading names a rule this tool implements, and the data it

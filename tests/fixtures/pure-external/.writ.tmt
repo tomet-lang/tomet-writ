@@ -4,10 +4,14 @@
 
 ##[ parser-purity ]
 
-@pure{
-  crates: [ "core" ]
-  forbid: [ ]
-  allow-external: [ ]
+@rule(parser-purity){
+  guard: { twrit: pure }
+
+  pure: {
+    crates: [ "core" ]
+    forbid: [ ]
+    allow-external: [ ]
+  }
 }
 
 `core` depends on `outside`, which is not a workspace member and is not

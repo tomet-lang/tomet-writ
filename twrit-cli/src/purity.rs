@@ -1,4 +1,4 @@
-//! The `@pure` guard: crates that may not reach the outside world.
+//! The `pure` guard: crates that may not reach the outside world.
 //!
 //! Two halves, because there are two ways to acquire the ability:
 //!
@@ -10,7 +10,7 @@
 //!    source, so it cannot be done bare-handed either.
 //!
 //! Neither name nor path is written here. Which crates, and which paths,
-//! are `@pure` data in the writ -- see `AGENTS.md`'s "What belongs in this
+//! are `pure` data in the writ -- see `AGENTS.md`'s "What belongs in this
 //! tool".
 
 use std::collections::{BTreeSet, VecDeque};
@@ -18,12 +18,12 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
-use tomet_ast::{Element, ElementValue, Entry, Value};
+use tomet_ast::Value;
 
-use crate::writ::Writ;
+use crate::writ::{Rule, Writ, twrit_rules};
 use crate::{Outcome, plural};
 
-/// One `@pure` declaration.
+/// One `pure` declaration.
 struct Pure {
     /// Directory paths, relative to the workspace root.
     crates: Vec<String>,
@@ -32,28 +32,29 @@ struct Pure {
 }
 
 impl Pure {
-    fn read(el: &Element) -> Result<Self> {
-        let Some(ElementValue::Group(entries)) = &el.value else {
-            anyhow::bail!("`@pure` has no `{{...}}` group");
-        };
+    fn read(rule: &Rule) -> Result<Self> {
+        let entries = rule.map("pure").with_context(|| {
+            format!(
+                "{}: `@rule({})` guards `pure` but declares no `pure:` parameter",
+                rule.path.display(),
+                rule.id
+            )
+        })?;
 
         let mut crates = Vec::new();
         let mut allow_external = Vec::new();
         let mut forbid = Vec::new();
 
-        for entry in entries {
-            let Entry::Pair(key, value) = entry else {
-                anyhow::bail!("`@pure` holds an element where a `key: value` pair was expected");
-            };
+        for (key, value) in entries {
             match key.as_str() {
                 "crates" => crates = strings(key, value)?,
                 "forbid" => forbid = strings(key, value)?,
                 "allow-external" => allow_external = strings(key, value)?,
-                other => anyhow::bail!("`@pure` does not know the key `{other}`"),
+                other => anyhow::bail!("`pure` does not know the key `{other}`"),
             }
         }
 
-        anyhow::ensure!(!crates.is_empty(), "`@pure` names no crates");
+        anyhow::ensure!(!crates.is_empty(), "`pure` names no crates");
         Ok(Pure {
             crates,
             allow_external,
@@ -64,26 +65,26 @@ impl Pure {
 
 fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
     let Value::Seq(items) = value else {
-        anyhow::bail!("`@pure`'s `{key}` is not a list");
+        anyhow::bail!("`pure`'s `{key}` is not a list");
     };
     items
         .iter()
         .map(|item| match item {
             Value::String(s) => Ok(s.clone()),
-            other => anyhow::bail!("`@pure`'s `{key}` holds a non-string entry: {other:?}"),
+            other => anyhow::bail!("`pure`'s `{key}` holds a non-string entry: {other:?}"),
         })
         .collect()
 }
 
-/// Runs every `@pure` declared across `writs`.
+/// Runs every `pure` declared across `writs`.
 ///
 /// `Outcome::NotDeclared` when no writ carries one, for the same reason
 /// `crate-layering` does: an empty violation list is what a guard that
 /// checked everything returns, and what one that checked nothing
 /// returns, and they are not the same answer.
 pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
-    let declarations: Vec<&Element> = writs.iter().filter_map(|w| w.element("pure")).collect();
-    if declarations.is_empty() {
+    let rules = twrit_rules(writs, "pure")?;
+    if rules.is_empty() {
         return Ok(Outcome::NotDeclared);
     }
 
@@ -94,8 +95,8 @@ pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
 
     let mut violations = Vec::new();
     let mut checked = 0;
-    for el in declarations {
-        let pure = Pure::read(el)?;
+    for rule in &rules {
+        let pure = Pure::read(rule)?;
         for dir in &pure.crates {
             check_one(&metadata, workspace_root, dir, &pure, &mut violations)?;
             checked += 1;
@@ -123,7 +124,7 @@ fn check_one(
             .is_some_and(|d| d.to_string_lossy().replace('\\', "/") == dir)
     });
     let Some(package) = package else {
-        violations.push(format!("`@pure` names {dir}, which is not a workspace member"));
+        violations.push(format!("`pure` names {dir}, which is not a workspace member"));
         return Ok(());
     };
 

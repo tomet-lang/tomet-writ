@@ -1,15 +1,16 @@
 @kind(writ)
 
-#[ Writ: upward-edge fixture ]
+#[ Writ: rule-namespaced fixture ]
 
-Three layers and one edge that runs the wrong way.
+Three layers and one edge that runs the wrong way, with the rule written
+in its namespaced spelling.
 
 ##[ crate-layering ]
 
 Every workspace member belongs to exactly one layer, and depends only on
 layers strictly below its own.
 
-@rule(crate-layering){
+@writ.rule(crate-layering){
   guard: { twrit: layers }
 
   layers: {

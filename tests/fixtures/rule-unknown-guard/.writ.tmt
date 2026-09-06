@@ -1,0 +1,12 @@
+@kind(writ)
+
+#[ Writ: rule-unknown-guard fixture ]
+
+##[ crate-layering ]
+
+@rule(crate-layering){
+  guard: { by: "twrit" }
+}
+
+A holder this tool does not know. Refused by name rather than ignored: a
+guard field nobody reads is a rule nobody checks.

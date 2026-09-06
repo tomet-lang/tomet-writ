@@ -7,7 +7,7 @@
 fn upward_dependency_is_reported() {
     // `mid` (layer 1) depends on `top` (layer 2). Both sides name their
     // own directory, because the directory is the half of a crate's
-    // identity that `@layers` matches on -- a reader has to be able to
+    // identity that `layers` matches on -- a reader has to be able to
     // find both ends in the declaration they just violated.
     assert_eq!(
         twrit_tests::check("upward-edge"),
@@ -23,7 +23,7 @@ fn unclassified_member_is_reported() {
     // in the declaration, and nothing else would ever point at it.
     assert_eq!(
         twrit_tests::check("unclassified"),
-        "crate-layering: unclassified member: stray matches no layer in `@layers`\n\
+        "crate-layering: unclassified member: stray matches no layer in `layers`\n\
          1 writ, crate-layering: 1 violation (2 members), parser-purity: not declared\n"
     );
 }
@@ -68,15 +68,21 @@ fn a_dev_dependency_may_reach_upward() {
 fn a_layer_key_must_be_a_number() {
     assert_eq!(
         twrit_tests::check_err("layers-not-a-number"),
-        "`@layers` key `low` is not a layer number: invalid digit found in string"
+        "`layers` key `low` is not a layer number: invalid digit found in string"
     );
 }
 
 #[test]
-fn layers_without_a_group_is_refused() {
+fn a_rule_guarding_layers_without_the_parameter_is_refused() {
+    // The guard says this tool holds the rule; the parameter it would
+    // read is absent. Refusing is the only honest answer -- running with
+    // no patterns would classify nothing and report clean.
     assert_eq!(
         twrit_tests::check_err("layers-no-group"),
-        "`@layers` has no `{...}` group"
+        format!(
+            "{}: `@rule(crate-layering)` guards `layers` but declares no `layers:` parameter",
+            twrit_tests::fixture("layers-no-group").join(".writ.tmt").display()
+        )
     );
 }
 
@@ -84,7 +90,7 @@ fn layers_without_a_group_is_refused() {
 fn a_layer_must_hold_a_list() {
     assert_eq!(
         twrit_tests::check_err("layers-not-a-list"),
-        "`@layers`'s `1` is not a list"
+        "`layers`'s `1` is not a list"
     );
 }
 
@@ -95,7 +101,7 @@ fn a_pattern_must_be_a_string() {
     // makes.
     let msg = twrit_tests::check_err("layers-non-string");
     assert!(
-        msg.starts_with("`@layers`'s `1` holds a non-string entry: "),
+        msg.starts_with("`layers`'s `1` holds a non-string entry: "),
         "unexpected message: {msg}"
     );
 }
@@ -106,7 +112,7 @@ fn an_empty_layers_declaration_is_refused() {
     // times and never the cause.
     assert_eq!(
         twrit_tests::check_err("layers-empty"),
-        "`@layers` declares no members"
+        "`layers` declares no members"
     );
 }
 
@@ -114,7 +120,7 @@ fn an_empty_layers_declaration_is_refused() {
 fn two_layer_declarations_are_refused() {
     assert_eq!(
         twrit_tests::check_err("layers-twice"),
-        "more than one writ declares `@layers`; a layer order has to be one thing"
+        "more than one rule guards `layers`; a layer order has to be one thing"
     );
 }
 
@@ -127,23 +133,23 @@ fn two_layer_declarations_are_refused() {
 // fail when the hole is closed, which is the point.
 
 #[test]
-fn a_bare_layers_declaration_is_reported_as_undeclared() {
-    // NARROWED HOLE. `@layers` written without its `{...}` is absorbed
-    // into the paragraph above it and never becomes an element, so the
-    // guard finds no declaration.
+fn a_rule_with_no_group_is_refused() {
+    // CLOSED HOLE. This fixture used to hold the worst failure this tool
+    // had: `@layers` written without its `{...}` was absorbed into the
+    // paragraph above, never became an element, and the guard reported
+    // nothing -- indistinguishable from a repository with no layering
+    // rule at all. One missing blank line could do the same.
     //
-    // It used to render as `crate-layering, parser-purity: ok` -- the
-    // names of the rule kinds this tool implements, printed whether or
-    // not either had run. The summary now says what each rule did, so
-    // the run no longer claims to have checked this.
-    //
-    // What is still missing is intent: nothing tells "the author wrote a
-    // layering rule and it is not being read" from "this repository has
-    // no layering rule". Only the writ can say which, and how it should
-    // say it is the author's decision -- see `.agents/tasks/`.
+    // It is not detectable-now, it is impossible-now. Parameters live
+    // inside the entry, so a declaration cannot come detached from the
+    // rule that owns it, and a rule with no group is refused by name.
     assert_eq!(
-        twrit_tests::check("layers-bare"),
-        "1 writ, crate-layering: not declared, parser-purity: not declared\n"
+        twrit_tests::check_err("layers-bare"),
+        format!(
+            "{}: `@rule(crate-layering)` has no `{{...}}` group, so it declares neither a \
+             guard nor parameters",
+            twrit_tests::fixture("layers-bare").join(".writ.tmt").display()
+        )
     );
 }
 
@@ -187,7 +193,7 @@ fn a_forbidden_path_names_the_file_relative_to_the_root() {
 fn a_pure_crate_that_does_not_exist_is_reported() {
     assert_eq!(
         twrit_tests::check("pure-not-a-member"),
-        "parser-purity: `@pure` names nope, which is not a workspace member\n\
+        "parser-purity: `pure` names nope, which is not a workspace member\n\
          1 writ, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
     );
 }
@@ -198,7 +204,7 @@ fn an_unknown_pure_key_is_refused() {
     // enforced and is not.
     assert_eq!(
         twrit_tests::check_err("pure-unknown-key"),
-        "`@pure` does not know the key `colour`"
+        "`pure` does not know the key `colour`"
     );
 }
 
@@ -206,7 +212,7 @@ fn an_unknown_pure_key_is_refused() {
 fn a_pure_declaration_naming_no_crate_is_refused() {
     assert_eq!(
         twrit_tests::check_err("pure-no-crates"),
-        "`@pure` names no crates"
+        "`pure` names no crates"
     );
 }
 
@@ -230,5 +236,67 @@ fn a_forbidden_path_in_an_internal_dependency_is_missed() {
     assert_eq!(
         twrit_tests::check("pure-dep-source"),
         "1 writ, crate-layering: not declared, parser-purity: ok (1 crate)\n"
+    );
+}
+
+// -- the entry shape ---------------------------------------------------
+
+#[test]
+fn a_namespaced_rule_resolves_the_same() {
+    // The bug this whole shape came out of. `@rule` and `@writ.rule` are
+    // two legal spellings of one element in a `@kind(writ)` document, and
+    // this tool used to match a bare `Sigil::Named` -- finding the first
+    // and silently ignoring the second. A rule silently ignored is a rule
+    // that stopped being checked.
+    //
+    // The fixture is `upward-edge` with the namespaced spelling and
+    // nothing else changed, so the expectation is that file's, verbatim.
+    assert_eq!(
+        twrit_tests::check("rule-namespaced"),
+        "crate-layering: upward dependency: mid (layer 1, mid) -> top (layer 2, top)\n\
+         1 writ, crate-layering: 1 violation (3 members), parser-purity: not declared\n"
+    );
+}
+
+#[test]
+fn a_rule_without_a_guard_is_refused() {
+    // Not "unguarded": unwritten. Counting it as unguarded would make an
+    // oversight and a decision look alike, which is the disease this
+    // field exists to cure.
+    assert_eq!(
+        twrit_tests::check_err("rule-no-guard"),
+        format!(
+            "{}: `@rule(crate-layering)` declares no `guard`; write `guard: {{ none: \"...\" }}` \
+             when nothing holds it yet",
+            twrit_tests::fixture("rule-no-guard").join(".writ.tmt").display()
+        )
+    );
+}
+
+#[test]
+fn an_unguarded_rule_must_say_why() {
+    // `none` is a decision and reads as one only with a reason attached.
+    // Empty, it is the silence it was meant to replace.
+    assert_eq!(
+        twrit_tests::check_err("rule-none-no-reason"),
+        format!(
+            "{}: `@rule(blueprint-shape)`'s `guard: none` has no reason; an unguarded rule says \
+             why, so it cannot be read as an oversight",
+            twrit_tests::fixture("rule-none-no-reason").join(".writ.tmt").display()
+        )
+    );
+}
+
+#[test]
+fn an_unknown_guard_holder_is_refused() {
+    // The four holders are the whole vocabulary. A fifth spelling is a
+    // guard field nobody reads, which is a rule nobody checks.
+    assert_eq!(
+        twrit_tests::check_err("rule-unknown-guard"),
+        format!(
+            "{}: `@rule(crate-layering)`'s guard holder `by` is not one of `twrit`, `runs`, \
+             `test`, `none`",
+            twrit_tests::fixture("rule-unknown-guard").join(".writ.tmt").display()
+        )
     );
 }

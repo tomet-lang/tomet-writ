@@ -4,7 +4,11 @@
 
 ##[ crate-layering ]
 
-@layers{
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+  }
 }
 
 An empty declaration would classify nothing, and then report every

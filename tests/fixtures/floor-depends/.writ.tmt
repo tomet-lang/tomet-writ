@@ -7,8 +7,12 @@
 The lowest layer may be depended on freely, but may itself depend on no
 workspace member -- its whole value is being arrived at independently.
 
-@layers{
-  0: [ "base", "helper" ]
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    0: [ "base", "helper" ]
+  }
 }
 
 `base` depends on `helper`. Both sit on the floor, so this is not an
