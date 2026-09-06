@@ -101,6 +101,22 @@ a block comment -- both would mean string surgery in the guard. A plain
 value group of `key: [ "string", ... ]` arrives as
 `Entry::Pair(String, Seq([String, ...]))` and needs no parsing at all.
 
+## Two questions, two commands
+
+`twrit check` asks whether the code obeys its rules, and fails when it
+does not. `twrit list` asks whether anything is holding them, and always
+exits zero -- it reports, it does not judge.
+
+The second is the one that had no other answer. A rule guarded by a test
+somebody renamed is still written down, still names a guard, and is held
+by nothing; `check` cannot see it, because there is no violation to find.
+`list` follows a `test:` pointer and says `-- MISSING` when it does not
+resolve.
+
+Only `test:` can be followed. `runs:` names a runner this tool does not
+execute, and verifying it would mean knowing every runner a repository
+might ship.
+
 ## What belongs in this tool
 
 `twrit` implements rule **kinds**. The writ supplies the **parameters**.

@@ -1,0 +1,43 @@
+@kind(writ)
+
+#[ Writ: guard-kinds fixture ]
+
+One rule per guard spelling, so the listing has all four to render and
+one dead pointer to report.
+
+##[ crate-layering ]
+
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: {
+    0: [ "thing" ]
+  }
+}
+
+##[ generated-md-not-edited ]
+
+@rule(generated-md-not-edited){
+  guard: { runs: "just docs-check" }
+}
+
+##[ no-vocabulary ]
+
+@rule(no-vocabulary){
+  guard: { test: "tests/src/present.rs" }
+}
+
+##[ renamed-away ]
+
+@rule(renamed-away){
+  guard: { test: "tests/src/gone.rs" }
+}
+
+The test this points at does not exist. Nothing runs it, and nothing
+would have said so.
+
+##[ blueprint-shape ]
+
+@rule(blueprint-shape){
+  guard: { none: "no cheap check for the args shape yet" }
+}

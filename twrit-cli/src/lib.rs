@@ -165,6 +165,123 @@ pub fn plural(n: usize, noun: &str) -> String {
 /// checked against it before anything runs.
 pub const KINDS: &[&str] = &["layers", "pure"];
 
+/// One rule as `twrit list` shows it: who holds it, and whether that
+/// holder is still there.
+pub struct Listed {
+    pub id: String,
+    /// The holder's spelling -- `twrit`, `runs`, `test`, `none`.
+    pub holder: &'static str,
+    /// What it points at, or the reason when nobody holds it.
+    pub target: String,
+    /// A pointer that no longer resolves. Only `test:` can be followed
+    /// from here; `runs:` names a runner this tool does not execute, and
+    /// verifying it would mean knowing every runner a repository ships.
+    pub dead: bool,
+}
+
+/// Every rule a repository declares, and who holds it.
+pub struct Listing {
+    root: PathBuf,
+    writ_count: usize,
+    rules: Vec<Listed>,
+}
+
+impl Listing {
+    pub fn rules(&self) -> &[Listed] {
+        &self.rules
+    }
+
+    /// Rules whose guard points at something that is not there.
+    pub fn dead_count(&self) -> usize {
+        self.rules.iter().filter(|r| r.dead).count()
+    }
+
+    pub fn render(&self) -> String {
+        if self.writ_count == 0 {
+            return format!("no .writ.tmt found under {}\n", self.root.display());
+        }
+
+        // Two columns of padding, computed from the rows rather than
+        // fixed: an id is as long as the author made it.
+        let id_width = self.rules.iter().map(|r| r.id.len()).max().unwrap_or(0);
+        let holder_width = self.rules.iter().map(|r| r.holder.len()).max().unwrap_or(0);
+
+        let mut out = String::new();
+        for rule in &self.rules {
+            let dead = if rule.dead { " -- MISSING" } else { "" };
+            out.push_str(&format!(
+                "{:id_width$}  {:holder_width$}  {}{dead}\n",
+                rule.id, rule.holder, rule.target
+            ));
+        }
+
+        let unguarded = self
+            .rules
+            .iter()
+            .filter(|r| r.holder == "none")
+            .count();
+        let mut summary = format!(
+            "\n{}, {}",
+            plural(self.writ_count, "writ"),
+            plural(self.rules.len(), "rule")
+        );
+        if unguarded > 0 {
+            summary.push_str(&format!(" ({unguarded} unguarded)"));
+        }
+        let dead = self.dead_count();
+        if dead > 0 {
+            summary.push_str(&format!(", {}", plural(dead, "dead guard")));
+        }
+        summary.push('\n');
+        out.push_str(&summary);
+        out
+    }
+}
+
+/// Lists every rule the writs under `root` declare.
+///
+/// `check` asks whether the code obeys its rules. This asks whether
+/// anything is holding them, which is the question that has no other
+/// answer -- a rule guarded by a test nobody kept is still written down,
+/// still named, and held by nothing.
+pub fn list(root: &Path) -> Result<Listing> {
+    let writs = writ::discover(root)?;
+    if writs.is_empty() {
+        return Ok(Listing {
+            root: root.to_path_buf(),
+            writ_count: 0,
+            rules: Vec::new(),
+        });
+    }
+
+    let mut rules = Vec::new();
+    for w in &writs {
+        for rule in w.rules()? {
+            let (holder, target, dead) = match &rule.guard {
+                writ::Guard::Twrit(kind) => ("twrit", kind.clone(), !KINDS.contains(&kind.as_str())),
+                writ::Guard::Runs(cmd) => ("runs", cmd.clone(), false),
+                // Paths are workspace-root relative, as in `layers`.
+                writ::Guard::Test(path) => {
+                    ("test", path.clone(), !root.join(path).exists())
+                }
+                writ::Guard::None(why) => ("none", why.clone(), false),
+            };
+            rules.push(Listed {
+                id: rule.id,
+                holder,
+                target,
+                dead,
+            });
+        }
+    }
+
+    Ok(Listing {
+        root: root.to_path_buf(),
+        writ_count: writs.len(),
+        rules,
+    })
+}
+
 /// Reads every writ at or below `root` and runs each rule kind against it.
 pub fn check(root: &Path) -> Result<Report> {
     let writs = writ::discover(root)?;

@@ -139,6 +139,10 @@ pub fn discover(root: &Path) -> Result<Vec<Writ>> {
         });
     }
 
+    // Sorted by path, so a listing reads root-first the way the writs
+    // themselves are read -- and so two runs over the same tree print the
+    // same thing. `WalkBuilder`'s order is its own business.
+    found.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(found)
 }
 

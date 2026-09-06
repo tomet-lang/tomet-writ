@@ -58,3 +58,11 @@ pub fn check_err(name: &str) -> String {
         Err(e) => format!("{e:#}"),
     }
 }
+
+/// The listing `twrit list` would print for one fixture.
+pub fn list(name: &str) -> String {
+    let dir = fixture(name);
+    twrit_cli::list(&dir)
+        .unwrap_or_else(|e| panic!("fixture `{name}` failed to list: {e:#}"))
+        .render()
+}

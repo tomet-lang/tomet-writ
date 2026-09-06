@@ -55,6 +55,7 @@ None would have been found by generating a reference and reading it.
 | `fixtures/.tomet/vocabularies/` | The writ vocabulary `@rule` resolves against |
 | `src/lib.rs` | Harness: locating a fixture, running `check` over it |
 | `src/guards.rs` | What each guard reports |
+| `src/list.rs` | What `twrit list` prints |
 | `src/writ.rs` | Finding and reading writs, before any rule looks at one |
 
 ## The fixtures share one vault
@@ -125,4 +126,5 @@ fixture is still here as `layers-bare`, asserting the refusal.
 ```bash
 cargo test -p twrit-tests
 cargo test -p twrit-tests --test guards
+cargo test -p twrit-tests --test list
 ```

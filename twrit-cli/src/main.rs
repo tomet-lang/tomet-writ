@@ -21,14 +21,28 @@ enum Command {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
+    /// List every rule the writs declare, and who holds it.
+    List {
+        /// Repository root. Defaults to the current directory.
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
 }
 
 fn main() -> ExitCode {
-    let cli = Cli::parse();
-    let Command::Check { path } = cli.command;
+    match run(Cli::parse().command) {
+        Ok(code) => code,
+        Err(e) => {
+            eprintln!("twrit: {e:#}");
+            ExitCode::FAILURE
+        }
+    }
+}
 
-    match twrit_cli::check(&path) {
-        Ok(report) => {
+fn run(command: Command) -> anyhow::Result<ExitCode> {
+    Ok(match command {
+        Command::Check { path } => {
+            let report = twrit_cli::check(&path)?;
             print!("{}", report.render());
             if report.violation_count() == 0 {
                 ExitCode::SUCCESS
@@ -36,9 +50,12 @@ fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         }
-        Err(e) => {
-            eprintln!("twrit: {e:#}");
-            ExitCode::FAILURE
+        // A listing reports; it does not judge. A dead guard is a finding
+        // and `check` is where a finding fails a run, so this exits zero
+        // whatever it prints.
+        Command::List { path } => {
+            print!("{}", twrit_cli::list(&path)?.render());
+            ExitCode::SUCCESS
         }
-    }
+    })
 }
