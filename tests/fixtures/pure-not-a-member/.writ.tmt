@@ -1,0 +1,14 @@
+@kind(writ)
+
+#[ Writ: pure-not-a-member fixture ]
+
+##[ parser-purity ]
+
+@pure{
+  crates: [ "nope" ]
+  forbid: [ ]
+  allow-external: [ ]
+}
+
+A rule naming a crate that does not exist is checking nothing, and has to
+say so rather than pass.

@@ -1,0 +1,15 @@
+@kind(writ)
+
+#[ Writ: pure-build-rs fixture ]
+
+##[ parser-purity ]
+
+@pure{
+  crates: [ "core" ]
+  forbid: [ "std::fs" ]
+  allow-external: [ ]
+}
+
+The forbidden path is in `core/build.rs`, not under `core/src/`. A build
+script runs at compile time and is exactly how a crate that may not touch
+the filesystem acquires the ability anyway.

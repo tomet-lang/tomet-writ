@@ -1,0 +1,9 @@
+@kind(writ)
+
+#[ Writ: layers-twice fixture, root ]
+
+##[ crate-layering ]
+
+@layers{
+  0: [ "thing" ]
+}

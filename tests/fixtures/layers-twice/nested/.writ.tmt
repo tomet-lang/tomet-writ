@@ -1,0 +1,12 @@
+@kind(writ)
+
+#[ Writ: layers-twice fixture, nested ]
+
+##[ crate-layering ]
+
+A second declaration, in a writ further down. A layer order is a
+property of the workspace, so there can only be one of it.
+
+@layers{
+  0: [ "other" ]
+}

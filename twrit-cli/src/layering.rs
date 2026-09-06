@@ -20,6 +20,7 @@ use anyhow::{Context, Result};
 use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
 
 use crate::writ::{Writ, string_list_map};
+use crate::{Outcome, plural};
 
 /// The layer a pattern list was declared under, lowest number first.
 struct Layers {
@@ -37,7 +38,7 @@ impl Layers {
             .with_context(|| format!("{}: no `@layers` declaration", writ.path.display()))?;
 
         let mut patterns = Vec::new();
-        for (key, globs) in string_list_map(el, "@layers")? {
+        for (key, globs) in string_list_map(el, "`@layers`")? {
             let layer: u32 = key
                 .parse()
                 .with_context(|| format!("`@layers` key `{key}` is not a layer number"))?;
@@ -71,10 +72,14 @@ impl Layers {
 }
 
 /// Runs the guard against the workspace whose manifest is at
-/// `workspace_root/Cargo.toml`, returning one line per violation.
-pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Vec<String>> {
+/// `workspace_root/Cargo.toml`.
+///
+/// `Outcome::NotDeclared` when no writ carries `@layers` -- not an empty
+/// violation list, which would be indistinguishable from a workspace
+/// whose every edge runs the right way.
+pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
     let Some(writ) = writs.iter().find(|w| w.element("layers").is_some()) else {
-        return Ok(Vec::new());
+        return Ok(Outcome::NotDeclared);
     };
     if writs.iter().filter(|w| w.element("layers").is_some()).count() > 1 {
         anyhow::bail!("more than one writ declares `@layers`; a layer order has to be one thing");
@@ -91,7 +96,7 @@ pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Vec<String>> {
     let assigned = assign(&metadata, &layers, &mut violations);
 
     for package in metadata.workspace_packages() {
-        let Some(&(own_layer, _)) = assigned.get(package.name.as_str()) else {
+        let Some(&(own_layer, own_dir)) = assigned.get(package.name.as_str()) else {
             continue; // unclassified; already reported by `assign`
         };
 
@@ -104,8 +109,14 @@ pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Vec<String>> {
             };
 
             if dep_layer > own_layer {
+                // Both ends carry their own directory. `@layers` matches on
+                // the directory rather than the package name, and the two
+                // differ often enough to matter -- `crates/tomet-syntax-parser`
+                // publishes `tomet-parser`. A reader just told about an edge
+                // has to be able to find both of its ends in the declaration
+                // it violated.
                 violations.push(format!(
-                    "upward dependency: {} (layer {own_layer}, {dep_dir}) -> {} (layer {dep_layer})",
+                    "upward dependency: {} (layer {own_layer}, {own_dir}) -> {} (layer {dep_layer}, {dep_dir})",
                     package.name, dep.name
                 ));
             }
@@ -129,7 +140,10 @@ pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Vec<String>> {
 
     violations.sort();
     violations.dedup();
-    Ok(violations)
+    Ok(Outcome::checked(
+        plural(metadata.workspace_packages().len(), "member"),
+        violations,
+    ))
 }
 
 /// Maps each workspace member's package name to its layer and directory,

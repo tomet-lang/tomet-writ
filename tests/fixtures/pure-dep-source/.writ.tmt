@@ -1,0 +1,15 @@
+@kind(writ)
+
+#[ Writ: pure-dep-source fixture ]
+
+##[ parser-purity ]
+
+@pure{
+  crates: [ "core" ]
+  forbid: [ "std::fs" ]
+  allow-external: [ ]
+}
+
+`inner` is a workspace member, so the allowlist half walks through it
+into its dependencies. The `forbid` half stops at `core/src/`, so the
+same crate is trusted by one check and unexamined by the other.

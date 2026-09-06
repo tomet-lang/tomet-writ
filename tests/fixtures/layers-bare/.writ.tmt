@@ -1,0 +1,15 @@
+@kind(writ)
+
+#[ Writ: layers-bare fixture ]
+
+##[ crate-layering ]
+
+@layers
+
+The whole declaration, written without its `{...}`. This is a realistic
+mistake -- the heading names a rule this tool implements, and the data it
+needs is simply absent.
+
+`@layers` on its own line is not parsed as an element, so the guard finds
+no declaration and reports nothing. Nothing distinguishes that from a
+workspace with no layering rule at all.

@@ -1,0 +1,11 @@
+@kind(writ)
+
+#[ Writ: layers-empty fixture ]
+
+##[ crate-layering ]
+
+@layers{
+}
+
+An empty declaration would classify nothing, and then report every
+member as unclassified. Refusing to run says the real thing.

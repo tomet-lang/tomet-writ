@@ -1,0 +1,12 @@
+@kind(writ)
+
+#[ Writ: layers-not-a-list fixture ]
+
+##[ crate-layering ]
+
+@layers{
+  1: "thing"
+}
+
+A layer holds a list of patterns. One bare string is a different shape,
+not a shorthand for a list of one.

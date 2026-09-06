@@ -1,0 +1,11 @@
+@kind(writ)
+
+#[ Writ: pure-no-crates fixture ]
+
+##[ parser-purity ]
+
+@pure{
+  allow-external: [ ]
+}
+
+No crate is named, so the declaration binds nothing.

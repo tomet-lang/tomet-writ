@@ -1,0 +1,26 @@
+[package]
+name = "twrit-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+# Test targets live in `src/` and are declared explicitly, so the fixture
+# directory is never mistaken for one.
+autotests = false
+autobins = false
+autoexamples = false
+autobenches = false
+
+[lib]
+path = "src/lib.rs"
+
+[[test]]
+name = "guards"
+path = "src/guards.rs"
+
+[[test]]
+name = "writ"
+path = "src/writ.rs"
+
+[dependencies]
+twrit-cli = { path = "../twrit-cli" }

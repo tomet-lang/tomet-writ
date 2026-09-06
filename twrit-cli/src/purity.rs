@@ -21,6 +21,7 @@ use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
 use tomet_ast::{Element, ElementValue, Entry, Value};
 
 use crate::writ::Writ;
+use crate::{Outcome, plural};
 
 /// One `@pure` declaration.
 struct Pure {
@@ -74,12 +75,16 @@ fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
         .collect()
 }
 
-/// Runs every `@pure` declared across `writs`, returning one line per
-/// violation.
-pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Vec<String>> {
+/// Runs every `@pure` declared across `writs`.
+///
+/// `Outcome::NotDeclared` when no writ carries one, for the same reason
+/// `crate-layering` does: an empty violation list is what a guard that
+/// checked everything returns, and what one that checked nothing
+/// returns, and they are not the same answer.
+pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
     let declarations: Vec<&Element> = writs.iter().filter_map(|w| w.element("pure")).collect();
     if declarations.is_empty() {
-        return Ok(Vec::new());
+        return Ok(Outcome::NotDeclared);
     }
 
     let metadata = MetadataCommand::new()
@@ -88,16 +93,18 @@ pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Vec<String>> {
         .context("failed to read the workspace with `cargo metadata`")?;
 
     let mut violations = Vec::new();
+    let mut checked = 0;
     for el in declarations {
         let pure = Pure::read(el)?;
         for dir in &pure.crates {
             check_one(&metadata, workspace_root, dir, &pure, &mut violations)?;
+            checked += 1;
         }
     }
 
     violations.sort();
     violations.dedup();
-    Ok(violations)
+    Ok(Outcome::checked(plural(checked, "crate"), violations))
 }
 
 fn check_one(
@@ -155,7 +162,7 @@ fn check_one(
     }
 
     for path in &pure.forbid {
-        for hit in grep_sources(&workspace_root.join(dir), path)? {
+        for hit in grep_sources(workspace_root, dir, path)? {
             violations.push(format!("{dir} names a forbidden path: {path} in {hit}"));
         }
     }
@@ -163,14 +170,20 @@ fn check_one(
     Ok(())
 }
 
-/// Files under `dir`'s `src/` mentioning `needle`.
+/// Files under `<dir>/src` mentioning `needle`, named relative to
+/// `workspace_root`.
+///
+/// Relative, because the hit goes straight into a violation line that is
+/// read in a CI log or a diff: an absolute path differs per machine, and
+/// makes `twrit check .` and `twrit check /somewhere` report the same
+/// finding two different ways.
 ///
 /// Text search, deliberately. Anything cleverer needs to parse Rust, and a
 /// crate that has no business touching the filesystem has no business
 /// writing `std::fs` in a comment either.
-fn grep_sources(dir: &Path, needle: &str) -> Result<Vec<String>> {
+fn grep_sources(workspace_root: &Path, dir: &str, needle: &str) -> Result<Vec<String>> {
     let mut hits = Vec::new();
-    let src = dir.join("src");
+    let src = workspace_root.join(dir).join("src");
     if !src.is_dir() {
         return Ok(hits);
     }
@@ -185,7 +198,8 @@ fn grep_sources(dir: &Path, needle: &str) -> Result<Vec<String>> {
         let text = std::fs::read_to_string(entry.path())
             .with_context(|| format!("failed to read {}", entry.path().display()))?;
         if text.contains(needle) {
-            hits.push(entry.path().display().to_string());
+            let rel = entry.path().strip_prefix(workspace_root).unwrap_or(entry.path());
+            hits.push(rel.to_string_lossy().replace('\\', "/"));
         }
     }
     hits.sort();

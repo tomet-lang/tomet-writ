@@ -1,0 +1,14 @@
+@kind(writ)
+
+#[ Writ: pure-forbidden fixture ]
+
+##[ parser-purity ]
+
+@pure{
+  crates: [ "core" ]
+  forbid: [ "std::fs" ]
+  allow-external: [ ]
+}
+
+The other half of the rule: an allowlist stops the ability arriving as a
+dependency, and this stops it being done bare-handed.

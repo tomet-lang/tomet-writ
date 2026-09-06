@@ -1,0 +1,11 @@
+@kind(writ)
+
+#[ Writ: unparseable fixture ]
+
+A writ that cannot be parsed at all. The closing `}` is missing, which is
+what dropping a line out of `@layers` looks like.
+
+##[ crate-layering ]
+
+@layers{
+  0: [ "thing" ]

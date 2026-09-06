@@ -1,0 +1,22 @@
+@kind(writ)
+
+#[ Writ: upward-edge fixture ]
+
+Three layers and one edge that runs the wrong way.
+
+##[ crate-layering ]
+
+Every workspace member belongs to exactly one layer, and depends only on
+layers strictly below its own.
+
+@layers{
+  2: [ "top" ]
+  1: [ "mid" ]
+  0: [ "base" ]
+}
+
+`mid` depends on `top`, which is one layer up. That single edge is what
+this fixture exists to produce.
+
+`base` is the floor and depends on nothing, so the floor rule stays out
+of the way and only the upward edge is reported.

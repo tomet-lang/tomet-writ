@@ -1,0 +1,14 @@
+@kind(writ)
+
+#[ Writ: pure-external fixture ]
+
+##[ parser-purity ]
+
+@pure{
+  crates: [ "core" ]
+  forbid: [ ]
+  allow-external: [ ]
+}
+
+`core` depends on `outside`, which is not a workspace member and is not
+listed. The property is that nothing new arrives without a decision.

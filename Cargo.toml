@@ -3,7 +3,14 @@ resolver = "3"
 
 members = [
   "twrit-cli",
+  "tests",
 ]
+
+# The fixtures under `tests/fixtures/` are real Cargo workspaces -- the
+# guards read them through `cargo metadata`, so an approximation would
+# test the approximation. Each carries its own `[workspace]`, and this
+# excludes them so the outer workspace does not try to claim them.
+exclude = ["tests/fixtures"]
 
 default-members = ["twrit-cli"]
 
@@ -12,5 +19,3 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace.dependencies]
-
-#[ Crates.io ]

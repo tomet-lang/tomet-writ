@@ -1,0 +1,11 @@
+@kind(writ)
+
+#[ Writ: layers-non-string fixture ]
+
+##[ crate-layering ]
+
+@layers{
+  1: [ 42 ]
+}
+
+Patterns are directory paths, so every entry has to be a string.

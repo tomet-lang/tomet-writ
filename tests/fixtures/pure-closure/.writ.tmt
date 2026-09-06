@@ -1,0 +1,15 @@
+@kind(writ)
+
+#[ Writ: pure-closure fixture ]
+
+##[ parser-purity ]
+
+@pure{
+  crates: [ "core" ]
+  forbid: [ ]
+  allow-external: [ ]
+}
+
+`core` names one dependency and it is internal. The closure is what
+matters: `inner` is what reaches outside, and `core`'s own manifest reads
+like the whole story without being it.

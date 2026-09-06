@@ -1,0 +1,11 @@
+@kind(writ)
+
+#[ Writ: layers-not-a-number fixture ]
+
+##[ crate-layering ]
+
+@layers{
+  low: [ "thing" ]
+}
+
+A layer key has to be a number, because the whole rule is an ordering.

@@ -1,0 +1,15 @@
+@kind(writ)
+
+#[ Writ: ambiguous fixture ]
+
+##[ crate-layering ]
+
+Every workspace member belongs to exactly *one* layer.
+
+@layers{
+  1: [ "thing*" ]
+  0: [ "thing" ]
+}
+
+`thing` matches both patterns. Taking whichever was declared first would
+make the layer order depend on the writ's line order, so it is reported.

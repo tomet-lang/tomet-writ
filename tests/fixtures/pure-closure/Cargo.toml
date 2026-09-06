@@ -1,0 +1,9 @@
+# A fixture workspace, not a member of the outer one -- see the root
+# manifest's `exclude`. `vendor/` is excluded here in turn, so the
+# crates under it are dependencies without being members -- which is
+# what "external" means to the purity guard.
+[workspace]
+resolver = "3"
+
+members = [ "core", "inner" ]
+exclude = [ "vendor" ]

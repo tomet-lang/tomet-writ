@@ -1,0 +1,234 @@
+//! What each guard reports, one fixture per failure path.
+//!
+//! Every expectation below was written before the code was run. Where the
+//! two disagreed, the message that moved was the code's.
+
+#[test]
+fn upward_dependency_is_reported() {
+    // `mid` (layer 1) depends on `top` (layer 2). Both sides name their
+    // own directory, because the directory is the half of a crate's
+    // identity that `@layers` matches on -- a reader has to be able to
+    // find both ends in the declaration they just violated.
+    assert_eq!(
+        twrit_tests::check("upward-edge"),
+        "crate-layering: upward dependency: mid (layer 1, mid) -> top (layer 2, top)\n\
+         1 writ, crate-layering: 1 violation (3 members), parser-purity: not declared\n"
+    );
+}
+
+#[test]
+fn unclassified_member_is_reported() {
+    // The half of the layering rule that catches a rule never written.
+    // A member no pattern covers is not "unconstrained" -- it is a hole
+    // in the declaration, and nothing else would ever point at it.
+    assert_eq!(
+        twrit_tests::check("unclassified"),
+        "crate-layering: unclassified member: stray matches no layer in `@layers`\n\
+         1 writ, crate-layering: 1 violation (2 members), parser-purity: not declared\n"
+    );
+}
+
+#[test]
+fn ambiguous_member_names_both_layers() {
+    // Both patterns, not just the count: the fix is to change one of
+    // them, and the reader needs to know which two are in play.
+    assert_eq!(
+        twrit_tests::check("ambiguous"),
+        "crate-layering: ambiguous member: thing matches layer 1 (`thing*`) and layer 0 (`thing`)\n\
+         1 writ, crate-layering: 1 violation (1 member), parser-purity: not declared\n"
+    );
+}
+
+#[test]
+fn the_floor_may_not_depend_on_a_member() {
+    // Sideways, not upward: both crates sit on layer 0, so the direction
+    // check passes and this is the rule that has to catch it.
+    assert_eq!(
+        twrit_tests::check("floor-depends"),
+        "crate-layering: layer 0 depends on a workspace member: base -> helper\n\
+         1 writ, crate-layering: 1 violation (2 members), parser-purity: not declared\n"
+    );
+}
+
+#[test]
+fn a_dev_dependency_may_reach_upward() {
+    // `upward-edge` with the one edge moved to `[dev-dependencies]`.
+    // The exemption is written into the writ, so the guard has to be
+    // seen honouring it, not just seen catching things.
+    assert_eq!(
+        twrit_tests::check("dev-dependency"),
+        "1 writ, crate-layering: ok (3 members), parser-purity: not declared\n"
+    );
+}
+
+// A writ this tool cannot read is an error, not a violation. These pin
+// the message, because the message is the whole of what the author gets.
+
+#[test]
+fn a_layer_key_must_be_a_number() {
+    assert_eq!(
+        twrit_tests::check_err("layers-not-a-number"),
+        "`@layers` key `low` is not a layer number: invalid digit found in string"
+    );
+}
+
+#[test]
+fn layers_without_a_group_is_refused() {
+    assert_eq!(
+        twrit_tests::check_err("layers-no-group"),
+        "`@layers` has no `{...}` group"
+    );
+}
+
+#[test]
+fn a_layer_must_hold_a_list() {
+    assert_eq!(
+        twrit_tests::check_err("layers-not-a-list"),
+        "`@layers`'s `1` is not a list"
+    );
+}
+
+#[test]
+fn a_pattern_must_be_a_string() {
+    // Only the prefix. The tail is `tomet-ast`'s `Debug` for whatever was
+    // found, which is that crate's business and not a promise this suite
+    // makes.
+    let msg = twrit_tests::check_err("layers-non-string");
+    assert!(
+        msg.starts_with("`@layers`'s `1` holds a non-string entry: "),
+        "unexpected message: {msg}"
+    );
+}
+
+#[test]
+fn an_empty_layers_declaration_is_refused() {
+    // Not "everything is unclassified" -- that reports the symptom N
+    // times and never the cause.
+    assert_eq!(
+        twrit_tests::check_err("layers-empty"),
+        "`@layers` declares no members"
+    );
+}
+
+#[test]
+fn two_layer_declarations_are_refused() {
+    assert_eq!(
+        twrit_tests::check_err("layers-twice"),
+        "more than one writ declares `@layers`; a layer order has to be one thing"
+    );
+}
+
+// -- Known holes -------------------------------------------------------
+//
+// These assert what the tool does today, not what it should do. They are
+// written down rather than left out because a guard that quietly stopped
+// checking looks exactly like a guard that passes, and a hole nobody has
+// written down is indistinguishable from one nobody has found. Each will
+// fail when the hole is closed, which is the point.
+
+#[test]
+fn a_bare_layers_declaration_is_reported_as_undeclared() {
+    // NARROWED HOLE. `@layers` written without its `{...}` is absorbed
+    // into the paragraph above it and never becomes an element, so the
+    // guard finds no declaration.
+    //
+    // It used to render as `crate-layering, parser-purity: ok` -- the
+    // names of the rule kinds this tool implements, printed whether or
+    // not either had run. The summary now says what each rule did, so
+    // the run no longer claims to have checked this.
+    //
+    // What is still missing is intent: nothing tells "the author wrote a
+    // layering rule and it is not being read" from "this repository has
+    // no layering rule". Only the writ can say which, and how it should
+    // say it is the author's decision -- see `.agents/tasks/`.
+    assert_eq!(
+        twrit_tests::check("layers-bare"),
+        "1 writ, crate-layering: not declared, parser-purity: not declared\n"
+    );
+}
+
+// -- parser-purity -----------------------------------------------------
+
+#[test]
+fn an_unlisted_external_dependency_is_reported() {
+    assert_eq!(
+        twrit_tests::check("pure-external"),
+        "parser-purity: core reaches an external crate not in `allow-external`: core -> outside\n\
+         1 writ, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+    );
+}
+
+#[test]
+fn an_external_reached_through_a_member_is_reported() {
+    // The closure, not the direct list. `core`'s own manifest names one
+    // internal dependency and reads like the whole story; `inner` is what
+    // reaches outside. The edge reported is the real one, not `core`'s.
+    assert_eq!(
+        twrit_tests::check("pure-closure"),
+        "parser-purity: core reaches an external crate not in `allow-external`: inner -> outside\n\
+         1 writ, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+    );
+}
+
+#[test]
+fn a_forbidden_path_names_the_file_relative_to_the_root() {
+    // Relative to the workspace root, not absolute: the message goes into
+    // CI logs and diffs, and an absolute path makes it differ per machine
+    // and per invocation -- `twrit check .` and `twrit check /abs` would
+    // otherwise report the same finding two ways.
+    assert_eq!(
+        twrit_tests::check("pure-forbidden"),
+        "parser-purity: core names a forbidden path: std::fs in core/src/lib.rs\n\
+         1 writ, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+    );
+}
+
+#[test]
+fn a_pure_crate_that_does_not_exist_is_reported() {
+    assert_eq!(
+        twrit_tests::check("pure-not-a-member"),
+        "parser-purity: `@pure` names nope, which is not a workspace member\n\
+         1 writ, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+    );
+}
+
+#[test]
+fn an_unknown_pure_key_is_refused() {
+    // Not ignored. An unread key is a rule its author believes is being
+    // enforced and is not.
+    assert_eq!(
+        twrit_tests::check_err("pure-unknown-key"),
+        "`@pure` does not know the key `colour`"
+    );
+}
+
+#[test]
+fn a_pure_declaration_naming_no_crate_is_refused() {
+    assert_eq!(
+        twrit_tests::check_err("pure-no-crates"),
+        "`@pure` names no crates"
+    );
+}
+
+#[test]
+fn a_forbidden_path_in_build_rs_is_missed() {
+    // KNOWN HOLE. `grep_sources` walks `<crate>/src` only, so `build.rs`
+    // is never read -- and a build script is the plainest way for a crate
+    // that may not touch the filesystem to touch it anyway.
+    assert_eq!(
+        twrit_tests::check("pure-build-rs"),
+        "1 writ, crate-layering: not declared, parser-purity: ok (1 crate)\n"
+    );
+}
+
+#[test]
+fn a_forbidden_path_in_an_internal_dependency_is_missed() {
+    // KNOWN HOLE, and an asymmetry rather than an omission: the
+    // `allow-external` half walks the whole closure, so `inner` is inside
+    // the trust boundary, while the `forbid` half stops at `core/src`.
+    // One check trusts the crate, the other never looks at it.
+    assert_eq!(
+        twrit_tests::check("pure-dep-source"),
+        "1 writ, crate-layering: not declared, parser-purity: ok (1 crate)\n"
+    );
+}

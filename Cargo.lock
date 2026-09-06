@@ -475,6 +475,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "twrit-tests"
+version = "0.1.0"
+dependencies = [
+ "twrit-cli",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
