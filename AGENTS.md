@@ -95,6 +95,12 @@ in one call. A hand-written `Sigil::Named` match is how this tool once
 found the first spelling and silently ignored the second, which means the
 rule stopped being checked -- the exact failure it exists to prevent.
 
+`tomet check` validates a `@rule`'s *id* and nothing inside its group:
+`@data{ open: }` and per-key `@param` are not implemented there yet. So an
+unknown or malformed key is this tool's to refuse, and it does -- a rule
+half-understood is worse than one that refuses to run, because the half it
+dropped is where a violation would hide.
+
 Prefer a shape the parser already types. `@table`'s content arrives as one
 flat `Text` node, and bare children hold inline markup where `apps/*` opens
 a block comment -- both would mean string surgery in the guard. A plain
@@ -138,6 +144,12 @@ The moment a crate name, a directory, or an API string is written in *this*
 crate's source rather than read from a writ, `twrit` has stopped being a
 tool and become tomet's project manager, and there is no line left to stop
 the next one.
+
+Candidate kinds, and the evidence for each, are recorded in
+`../tomet/docs/design/ideas/documentation-layers.tmt` rather than here --
+that is where the survey of what `tomet` already guards was done. Check a
+candidate against the four `guard:` spellings first: "a test holds this"
+is `test:`, "a command holds this" is `runs:`, and neither needs a kind.
 
 So: **a rule that cannot be written down as data does not belong here.**
 It belongs in the repository's own test suite, or behind a command that
