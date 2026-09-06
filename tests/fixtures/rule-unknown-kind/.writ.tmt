@@ -1,0 +1,14 @@
+@kind(writ)
+
+#[ Writ: rule-unknown-kind fixture ]
+
+##[ import-cycles ]
+
+@rule(import-cycles){
+  guard: { twrit: cycles }
+}
+
+The writ says this tool holds the rule. It does not -- there is no
+`cycles` kind. Skipping it would leave the rule named, guarded on paper,
+and held by nothing, which is the failure this tool exists to catch,
+spelled one level up.

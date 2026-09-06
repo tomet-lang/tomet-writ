@@ -57,6 +57,16 @@ pub struct RuleResult {
 pub struct Report {
     root: PathBuf,
     writ_count: usize,
+    /// Every rule the writs declare, held or not.
+    ///
+    /// Counted separately from `rules` below, which is the kinds this
+    /// tool implements. The two answer different questions: how much this
+    /// repository has written down, and how much of it ran here.
+    rule_count: usize,
+    /// Rules whose guard is `none:`. Written down as held by nobody,
+    /// which is a decision and reads as one -- unlike a rule with no
+    /// guard at all, which is refused.
+    unguarded_count: usize,
     rules: Vec<RuleResult>,
 }
 
@@ -72,6 +82,14 @@ impl Report {
 
     pub fn writ_count(&self) -> usize {
         self.writ_count
+    }
+
+    pub fn rule_count(&self) -> usize {
+        self.rule_count
+    }
+
+    pub fn unguarded_count(&self) -> usize {
+        self.unguarded_count
     }
 
     /// The report as the CLI prints it, trailing newline included.
@@ -107,8 +125,22 @@ impl Report {
             })
             .collect();
 
+        // The census sits next to the writ count and before what ran,
+        // because it is the number this tool exists to produce: how many
+        // rules a repository has written down, and how many of them
+        // nothing is holding.
+        let census = if self.unguarded_count == 0 {
+            plural(self.rule_count, "rule")
+        } else {
+            format!(
+                "{} ({} unguarded)",
+                plural(self.rule_count, "rule"),
+                self.unguarded_count
+            )
+        };
+
         out.push_str(&format!(
-            "{}, {}\n",
+            "{}, {census}, {}\n",
             plural(self.writ_count, "writ"),
             summary.join(", ")
         ));
@@ -126,6 +158,13 @@ pub fn plural(n: usize, noun: &str) -> String {
     }
 }
 
+/// The rule kinds this tool implements, and the only values `guard:
+/// { twrit: ... }` may take.
+///
+/// Named here rather than only in the `vec!` below so a writ can be
+/// checked against it before anything runs.
+pub const KINDS: &[&str] = &["layers", "pure"];
+
 /// Reads every writ at or below `root` and runs each rule kind against it.
 pub fn check(root: &Path) -> Result<Report> {
     let writs = writ::discover(root)?;
@@ -133,8 +172,36 @@ pub fn check(root: &Path) -> Result<Report> {
         return Ok(Report {
             root: root.to_path_buf(),
             writ_count: 0,
+            rule_count: 0,
+            unguarded_count: 0,
             rules: Vec::new(),
         });
+    }
+
+    let declared: Vec<writ::Rule> = writs
+        .iter()
+        .map(|w| w.rules())
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
+        .flatten()
+        .collect();
+
+    // A rule naming a kind this tool does not implement is refused rather
+    // than skipped. Skipping it would mean the writ says twrit holds the
+    // rule and nothing does, which is the failure this whole tool is
+    // about, spelled one level up.
+    for rule in &declared {
+        if let writ::Guard::Twrit(kind) = &rule.guard
+            && !KINDS.contains(&kind.as_str())
+        {
+                anyhow::bail!(
+                    "{}: `@rule({})` names `twrit: {kind}`, which this tool does not implement; \
+                     it implements {}",
+                    rule.path.display(),
+                    rule.id,
+                    KINDS.join(", ")
+                );
+        }
     }
 
     let rules = vec![
@@ -151,6 +218,11 @@ pub fn check(root: &Path) -> Result<Report> {
     Ok(Report {
         root: root.to_path_buf(),
         writ_count: writs.len(),
+        rule_count: declared.len(),
+        unguarded_count: declared
+            .iter()
+            .filter(|r| matches!(r.guard, writ::Guard::None(_)))
+            .count(),
         rules,
     })
 }
