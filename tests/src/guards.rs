@@ -316,3 +316,28 @@ fn a_twrit_kind_this_tool_does_not_have_is_refused() {
         )
     );
 }
+
+#[test]
+fn a_guard_pointing_at_nothing_fails_the_check() {
+    // The writ says a test holds this rule. The test is not there, so the
+    // statement is false and the rule is held by nobody -- while still
+    // reading, in the writ and in `list`, as guarded.
+    //
+    // Reported under the rule that made the claim, not under a rule kind:
+    // nothing about `crate-layering` or `parser-purity` is wrong here.
+    // What is wrong is one entry's own account of itself.
+    assert_eq!(
+        twrit_tests::check("guard-kinds"),
+        "renamed-away: guard names tests/src/gone.rs, which does not exist\n\
+         1 writ, 5 rules (1 unguarded), 1 dead guard, crate-layering: ok (1 member), \
+         parser-purity: not declared\n"
+    );
+}
+
+#[test]
+fn a_dead_guard_is_counted_as_a_violation() {
+    // Which is what makes the run exit non-zero. A finding only `list`
+    // shows is a finding only a person who remembered to look will see,
+    // and `check` is what CI runs.
+    assert_eq!(twrit_tests::report("guard-kinds").violation_count(), 1);
+}

@@ -51,6 +51,25 @@ pub enum Guard {
 }
 
 impl Guard {
+    /// What this guard points at, when the pointer no longer resolves.
+    ///
+    /// Only `test:` can be followed. `runs:` names a runner this tool does
+    /// not execute, and verifying it would mean knowing every runner a
+    /// repository might ship; `twrit:` is checked against `KINDS` before
+    /// anything runs; `none:` points at nothing by construction.
+    ///
+    /// Existence is a weak proxy and says so: a file that is there may
+    /// hold no test at all. It is one-sided on purpose -- a path that
+    /// resolves proves nothing, and a path that does not proves the rule
+    /// is held by nobody.
+    pub fn dead_pointer(&self, root: &Path) -> Option<&str> {
+        match self {
+            // Paths are workspace-root relative, as in `layers`.
+            Guard::Test(path) if !root.join(path).exists() => Some(path),
+            _ => None,
+        }
+    }
+
     fn from_map(entries: &[(String, Value)], id: &str) -> Result<Self> {
         let [(key, value)] = entries else {
             anyhow::bail!(

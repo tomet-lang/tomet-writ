@@ -67,13 +67,23 @@ pub struct Report {
     /// which is a decision and reads as one -- unlike a rule with no
     /// guard at all, which is refused.
     unguarded_count: usize,
+    /// Findings that belong to one rule rather than to a rule kind: a
+    /// writ whose own account of itself is wrong.
+    dead_guards: Vec<String>,
     rules: Vec<RuleResult>,
 }
 
 impl Report {
-    /// The total number of violations across every rule.
+    /// The total number of findings: rule violations, plus guards that
+    /// point at nothing.
+    ///
+    /// A dead guard counts, and so fails the run. It is not a violation
+    /// of the rule it sits on -- the code may well still obey -- but the
+    /// writ says a test holds the rule and no test does, and a false
+    /// statement in a writ is exactly what this tool is for.
     pub fn violation_count(&self) -> usize {
-        self.rules.iter().map(|r| r.outcome.violations().len()).sum()
+        self.rules.iter().map(|r| r.outcome.violations().len()).sum::<usize>()
+            + self.dead_guards.len()
     }
 
     pub fn rules(&self) -> &[RuleResult] {
@@ -103,6 +113,9 @@ impl Report {
         }
 
         let mut out = String::new();
+        for finding in &self.dead_guards {
+            out.push_str(&format!("{finding}\n"));
+        }
         for rule in &self.rules {
             for violation in rule.outcome.violations() {
                 out.push_str(&format!("{}: {violation}\n", rule.name));
@@ -129,15 +142,13 @@ impl Report {
         // because it is the number this tool exists to produce: how many
         // rules a repository has written down, and how many of them
         // nothing is holding.
-        let census = if self.unguarded_count == 0 {
-            plural(self.rule_count, "rule")
-        } else {
-            format!(
-                "{} ({} unguarded)",
-                plural(self.rule_count, "rule"),
-                self.unguarded_count
-            )
-        };
+        let mut census = plural(self.rule_count, "rule");
+        if self.unguarded_count > 0 {
+            census.push_str(&format!(" ({} unguarded)", self.unguarded_count));
+        }
+        if !self.dead_guards.is_empty() {
+            census.push_str(&format!(", {}", plural(self.dead_guards.len(), "dead guard")));
+        }
 
         out.push_str(&format!(
             "{}, {census}, {}\n",
@@ -260,17 +271,14 @@ pub fn list(root: &Path) -> Result<Listing> {
             let (holder, target, dead) = match &rule.guard {
                 writ::Guard::Twrit(kind) => ("twrit", kind.clone(), !KINDS.contains(&kind.as_str())),
                 writ::Guard::Runs(cmd) => ("runs", cmd.clone(), false),
-                // Paths are workspace-root relative, as in `layers`.
-                writ::Guard::Test(path) => {
-                    ("test", path.clone(), !root.join(path).exists())
-                }
+                writ::Guard::Test(path) => ("test", path.clone(), false),
                 writ::Guard::None(why) => ("none", why.clone(), false),
             };
             rules.push(Listed {
+                dead: dead || rule.guard.dead_pointer(root).is_some(),
                 id: rule.id,
                 holder,
                 target,
-                dead,
             });
         }
     }
@@ -291,6 +299,7 @@ pub fn check(root: &Path) -> Result<Report> {
             writ_count: 0,
             rule_count: 0,
             unguarded_count: 0,
+            dead_guards: Vec::new(),
             rules: Vec::new(),
         });
     }
@@ -335,6 +344,14 @@ pub fn check(root: &Path) -> Result<Report> {
     Ok(Report {
         root: root.to_path_buf(),
         writ_count: writs.len(),
+        dead_guards: declared
+            .iter()
+            .filter_map(|rule| {
+                rule.guard.dead_pointer(root).map(|target| {
+                    format!("{}: guard names {target}, which does not exist", rule.id)
+                })
+            })
+            .collect(),
         rule_count: declared.len(),
         unguarded_count: declared
             .iter()

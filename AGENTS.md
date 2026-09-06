@@ -113,15 +113,25 @@ value group of `key: [ "string", ... ]` arrives as
 does not. `twrit list` asks whether anything is holding them, and always
 exits zero -- it reports, it does not judge.
 
-The second is the one that had no other answer. A rule guarded by a test
-somebody renamed is still written down, still names a guard, and is held
-by nothing; `check` cannot see it, because there is no violation to find.
-`list` follows a `test:` pointer and says `-- MISSING` when it does not
-resolve.
+`check` fails on a guard that points at nothing, because a writ saying a
+test holds a rule when no such test exists is a false statement in the
+writ, and a false statement in a writ is what this tool is for. It is
+reported under the rule that made the claim rather than under a rule
+kind: what is wrong is one entry's own account of itself, not the code.
+
+`list` shows the same finding as `-- MISSING`, alongside every rule that
+is fine. That is the difference between the two -- `check` prints what is
+wrong, `list` prints everything and lets you read it.
 
 Only `test:` can be followed. `runs:` names a runner this tool does not
 execute, and verifying it would mean knowing every runner a repository
 might ship.
+
+And the check is one-sided on purpose. A path that does not resolve
+proves the rule is held by nobody; a path that does resolve proves
+nothing -- the file may hold no test at all, or one that was gutted.
+`no-vocabulary`'s own entry in `tomet` records exactly that stronger gap
+about itself.
 
 ## What belongs in this tool
 
