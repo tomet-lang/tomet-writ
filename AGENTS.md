@@ -19,14 +19,23 @@ read them before changing how writs are parsed.
 
 ## The two repositories
 
+`.cargo/config.toml` carries a `[patch]` pointing the tomet git dependency
+at the sibling checkout, so a change there is visible here without a round
+trip through Forgejo. It applies to every cargo invocation under this
+directory, including `cargo metadata` on the fixture workspaces -- which is
+why eight of them carry a `[[patch.unused]]` block in their lockfile.
+Inert, and stable across runs.
+
 Neither builds the other. `tomet`'s flake takes `twrit` as a dev-shell tool
 for project management; this flake takes `tomet` as a dev-shell tool for
 formatting `.tmt` files. `flake.lock` pins both, so the mutual inputs
 resolve over commits rather than looping.
 
 At the Cargo level the direction is one way: `twrit-cli` depends on
-`tomet-parser`/`tomet-ast`/`tomet-tree` as git dependencies, because reading
-a `.writ.tmt` means parsing Tomet. Nothing in `tomet` depends on this crate.
+`tomet-load`, `tomet-parser`, `tomet-ast`, `tomet-tree` and
+`tomet-semantics` as git dependencies, because reading a `.writ.tmt` means
+parsing Tomet *and resolving* what it parsed. Nothing in `tomet` depends on
+this crate.
 
 `.cargo/config.toml` sets `net.git-fetch-with-cli`: the tomet repository is
 on a private Forgejo over SSH and cargo's built-in libgit2 fetcher cannot
@@ -34,10 +43,57 @@ authenticate against it.
 
 ## Reading a writ
 
-Rules are located by **element name**, not by their heading. A heading is
-prose and will be reworded; an element name is the part a tool can be held
-to. `crate-layering`'s data is an `@layers` element, and the guard finds it
-by that name.
+An entry is one element:
+
+```tmt
+##[ any wording the author likes ]
+
+@rule(crate-layering){
+  guard: { twrit: layers }
+
+  layers: { 6: [ "apps/*" ], 5: [ ... ] }
+}
+
+Every workspace member belongs to exactly one layer ...
+
+---[ Why ]---
+...
+```
+
+The heading is prose and will be reworded; `@rule(id)` is the name a tool
+is held to. Parameters live *inside* the group, which is the point: a
+declaration cannot come detached from the rule that owns it, and a rule
+with no group is a refusal rather than a silence. It was not always so --
+`@layers` used to float at the top level owned by nothing, and one missing
+blank line before it deleted `tomet`'s layering rule for as long as that
+rule had existed, without anything reporting it.
+
+`guard:` is required and names exactly one holder:
+
+| Spelling | Means | What this tool does |
+| --- | --- | --- |
+| `{ twrit: kind }` | a kind implemented here | runs it; parameters come from the same group |
+| `{ runs: "just docs-check" }` | a runner the repository ships | records it, never executes it |
+| `{ test: "tests/src/x.rs" }` | a test over there | can check the path still exists |
+| `{ none: "why not" }` | nobody, said out loud | counts it |
+
+`none:` must carry a reason, and a rule with no `guard:` at all is an
+error. "Nobody holds this" and "somebody forgot" must not look alike --
+that is the same disease as a summary printing `ok` for a declaration it
+never read.
+
+A guard is a pointer, never a program. It answers only *who guarantees
+this right now*. Putting a shell line in the entry was considered and
+rejected: it is a Makefile wearing prose, and it would mean reading a
+`.writ.tmt` could run arbitrary commands.
+
+**Names are resolved, not matched.** A writ declares `@kind(writ)`, so
+`@rule` and `@writ.rule` are two legal spellings of one element and only
+`Bindings::classify` knows that. Reading goes through `tomet_load::Vault`,
+which assembles config discovery, vocabulary loading, parsing and binding
+in one call. A hand-written `Sigil::Named` match is how this tool once
+found the first spelling and silently ignored the second, which means the
+rule stopped being checked -- the exact failure it exists to prevent.
 
 Prefer a shape the parser already types. `@table`'s content arrives as one
 flat `Text` node, and bare children hold inline markup where `apps/*` opens
@@ -45,18 +101,21 @@ a block comment -- both would mean string surgery in the guard. A plain
 value group of `key: [ "string", ... ]` arrives as
 `Entry::Pair(String, Seq([String, ...]))` and needs no parsing at all.
 
-There is deliberately no `@invariant(...)`-style notation yet. The shape of
-a rule declaration should be decided once several guards exist and the
-repetition is obvious, not from a sample of one.
-
 ## What belongs in this tool
 
 `twrit` implements rule **kinds**. The writ supplies the **parameters**.
 
 `crate-layering` is the shape to copy: this crate knows "members belong to
 layers, and a layer may not depend upward", and nothing else. Which
-directories, and in what order, is `@layers` data inside the writ. Another
-repository writes its own `@layers` and the same code enforces it.
+directories, and in what order, is the `layers:` parameter inside the
+writ. Another repository writes its own and the same code enforces it.
+
+The kinds are listed once, in `KINDS`. A rule naming a `twrit:` kind that
+is not there is refused rather than skipped -- otherwise the writ says
+this tool holds the rule while nothing does. Adding a kind is adding a
+value there and a guard beside it; it is not adding an element to anyone's
+vocabulary, which is why that file is written once and does not grow with
+the rulebook.
 
 The failure to avoid is a rule that only makes sense for one repository.
 The moment a crate name, a directory, or an API string is written in *this*
@@ -89,15 +148,21 @@ This is a CLI with no interactive surface. Verify with `cargo build`,
 `cargo test` and by running it:
 
 ```bash
+cargo test -p twrit-tests
 cargo run -- check ../tomet
 ```
 
 A guard is not finished when it passes. **Make it fail before you believe
-it.** Mutate the writ it reads -- delete a row, invert an edge, make a
-member match two patterns -- confirm each path reports and exits non-zero,
-then restore. A guard that has never been seen to fail is not known to
-work, and a guard that silently stopped checking anything looks exactly
-like a guard that passes.
+it.** A guard that has never been seen to fail is not known to work, and
+one that silently stopped checking anything looks exactly like one that
+passes.
+
+`twrit-tests` is that ritual written down: one fixture per failure path,
+and every expectation typed before the code ran. Adding a guard means
+adding its fixtures, not just its code -- see `tests/README.md`. Mutating
+by hand is still worth doing for anything a fixture cannot reach, and the
+mutation is what stands in for the ritual where a message and its
+expectation had to be written together.
 
 ## Task tracking
 
