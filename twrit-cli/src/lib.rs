@@ -10,6 +10,7 @@
 //! asserts on `Report::render` is asserting on the text the CLI prints,
 //! without spawning it.
 
+pub mod door;
 pub mod layering;
 pub mod purity;
 pub mod writ;
@@ -18,38 +19,40 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
-/// What became of one rule kind on this run.
+/// What one rule did on this run.
 ///
-/// The distinction is the whole of it. A guard that found no declaration
-/// and a guard that checked everything and found nothing wrong both used
-/// to return an empty list, and an empty list renders as success -- which
-/// is how a rule that quietly stopped being enforced came to look exactly
-/// like a rule being kept.
-pub enum Outcome {
-    /// No writ declares this rule's data, so it did not run.
-    NotDeclared,
-    /// It ran. `scope` says over how much, because "checked and clean"
-    /// and "checked nothing and therefore clean" are also two answers.
-    Checked { scope: String, violations: Vec<String> },
+/// `scope` is carried because "checked and clean" and "checked nothing
+/// and therefore clean" are two answers -- a `layers` over a workspace
+/// with no members would otherwise read as a rule being kept.
+///
+/// There is no "not declared" any more. Under `@rule(id)` a declared
+/// rule always has an id and always runs; a malformed one is a parse
+/// error or a `guard` error, not a silence. What used to need that
+/// variant is now the census: a repository with no `layers` rule has
+/// none to report, and the rule count says how many it does have.
+pub struct Outcome {
+    pub scope: String,
+    pub violations: Vec<String>,
 }
 
 impl Outcome {
     pub fn checked(scope: String, violations: Vec<String>) -> Self {
-        Outcome::Checked { scope, violations }
+        Outcome { scope, violations }
     }
 
     pub fn violations(&self) -> &[String] {
-        match self {
-            Outcome::NotDeclared => &[],
-            Outcome::Checked { violations, .. } => violations,
-        }
+        &self.violations
     }
 }
 
-/// One rule kind's result: the name it is reported under, and what became
-/// of it.
+/// One rule's result, reported under the id its writ gave it.
+///
+/// The id and not the kind, because a kind can hold several rules: a
+/// repository has one `layers`, but it may have a `door` for file I/O and
+/// another for the way documents are read. "door: 2 violations" would
+/// name neither.
 pub struct RuleResult {
-    pub name: &'static str,
+    pub id: String,
     pub outcome: Outcome,
 }
 
@@ -118,23 +121,24 @@ impl Report {
         }
         for rule in &self.rules {
             for violation in rule.outcome.violations() {
-                out.push_str(&format!("{}: {violation}\n", rule.name));
+                out.push_str(&format!("{}: {violation}\n", rule.id));
             }
         }
 
         let summary: Vec<String> = self
             .rules
             .iter()
-            .map(|rule| match &rule.outcome {
-                Outcome::NotDeclared => format!("{}: not declared", rule.name),
-                Outcome::Checked { scope, violations } if violations.is_empty() => {
-                    format!("{}: ok ({scope})", rule.name)
+            .map(|rule| {
+                let Outcome { scope, violations } = &rule.outcome;
+                if violations.is_empty() {
+                    format!("{}: ok ({scope})", rule.id)
+                } else {
+                    format!(
+                        "{}: {} ({scope})",
+                        rule.id,
+                        plural(violations.len(), "violation")
+                    )
                 }
-                Outcome::Checked { scope, violations } => format!(
-                    "{}: {} ({scope})",
-                    rule.name,
-                    plural(violations.len(), "violation")
-                ),
             })
             .collect();
 
@@ -174,7 +178,15 @@ pub fn plural(n: usize, noun: &str) -> String {
 ///
 /// Named here rather than only in the `vec!` below so a writ can be
 /// checked against it before anything runs.
-pub const KINDS: &[&str] = &["layers", "pure"];
+pub const KINDS: &[&str] = &["layers", "pure", "door"];
+
+/// Kinds a repository may declare only once.
+///
+/// A layer order is one thing: two of them is not a stricter rule, it is
+/// two answers to "which layer is this crate in" and no way to pick. The
+/// others are plural by design -- one `door` per capability, one `pure`
+/// per crate that claims it.
+const SINGLETON_KINDS: &[&str] = &["layers"];
 
 /// One rule as `twrit list` shows it: who holds it, and whether that
 /// holder is still there.
@@ -330,16 +342,39 @@ pub fn check(root: &Path) -> Result<Report> {
         }
     }
 
-    let rules = vec![
-        RuleResult {
-            name: "crate-layering",
-            outcome: layering::check(&writs, root)?,
-        },
-        RuleResult {
-            name: "parser-purity",
-            outcome: purity::check(&writs, root)?,
-        },
-    ];
+    // Built from what the writs declare, not from what this tool can do.
+    // A repository is told about its own rules; the kinds it does not use
+    // are this crate's business and not its.
+    for kind in SINGLETON_KINDS {
+        let ids: Vec<&str> = declared
+            .iter()
+            .filter(|r| r.guard == writ::Guard::Twrit((*kind).to_string()))
+            .map(|r| r.id.as_str())
+            .collect();
+        if ids.len() > 1 {
+            anyhow::bail!(
+                "more than one rule guards `{kind}` ({}); a layer order has to be one thing",
+                ids.join(", ")
+            );
+        }
+    }
+
+    let mut rules = Vec::new();
+    for rule in &declared {
+        let writ::Guard::Twrit(kind) = &rule.guard else {
+            continue;
+        };
+        let outcome = match kind.as_str() {
+            "layers" => layering::check(rule, root)?,
+            "pure" => purity::check(rule, root)?,
+            "door" => door::check(rule, root)?,
+            _ => unreachable!("checked against KINDS above"),
+        };
+        rules.push(RuleResult {
+            id: rule.id.clone(),
+            outcome,
+        });
+    }
 
     Ok(Report {
         root: root.to_path_buf(),

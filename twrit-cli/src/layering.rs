@@ -19,7 +19,7 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
 
-use crate::writ::{Rule, Writ, string_list_map, twrit_rules};
+use crate::writ::{Rule, string_list_map};
 use crate::{Outcome, plural};
 
 /// The layer a pattern list was declared under, lowest number first.
@@ -81,15 +81,7 @@ impl Layers {
 /// `Outcome::NotDeclared` when no rule guards `layers` -- not an empty
 /// violation list, which would be indistinguishable from a workspace
 /// whose every edge runs the right way.
-pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
-    let rules = twrit_rules(writs, "layers")?;
-    let [rule] = rules.as_slice() else {
-        if rules.is_empty() {
-            return Ok(Outcome::NotDeclared);
-        }
-        anyhow::bail!("more than one rule guards `layers`; a layer order has to be one thing");
-    };
-
+pub fn check(rule: &Rule, workspace_root: &Path) -> Result<Outcome> {
     let layers = Layers::read(rule)?;
     let metadata = MetadataCommand::new()
         .manifest_path(workspace_root.join("Cargo.toml"))

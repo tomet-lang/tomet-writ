@@ -28,3 +28,7 @@ twrit-cli = { path = "../twrit-cli" }
 [[test]]
 name = "list"
 path = "src/list.rs"
+
+[[test]]
+name = "door"
+path = "src/door.rs"

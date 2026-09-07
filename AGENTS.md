@@ -133,6 +133,33 @@ nothing -- the file may hold no test at all, or one that was gutted.
 `no-vocabulary`'s own entry in `tomet` records exactly that stronger gap
 about itself.
 
+## `door`, and why prose cannot hold a rule like it
+
+`parser-purity` in `../tomet` says file resolution is
+`tomet-semantics-resolver`'s job "and the only place reading a referenced
+file is allowed". Six crates read files. The sentence was true when it was
+written; a second place appeared and nothing reported it, because a
+sentence saying "only" has no way to notice.
+
+```tmt
+door: {
+  names: [ "std::fs" ]
+  within: [ "crates/*" ]
+  allowed: [ "crates/tomet-config", ... ]
+}
+```
+
+The quantifier is the difference from `pure`, and it is the whole point.
+`pure` checks the crates it names, so a crate that acquires an ability
+without being named stays invisible to it. `door` names the crates that
+*may* have the ability and checks every other member, so a new one
+arriving is what fails.
+
+`within` exists because a door is usually about the libraries. A CLI reads
+files because that is what a CLI is, and listing every program under
+`allowed` leaves a list that permits almost everyone and therefore says
+almost nothing.
+
 ## What belongs in this tool
 
 `twrit` implements rule **kinds**. The writ supplies the **parameters**.

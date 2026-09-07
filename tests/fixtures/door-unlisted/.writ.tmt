@@ -1,0 +1,17 @@
+@kind(writ)
+
+#[ Writ: door-unlisted fixture ]
+
+##[ file-io ]
+
+@rule(file-io){
+  guard: { twrit: door }
+
+  door: {
+    names: [ "std::fs" ]
+    allowed: [ "reader" ]
+  }
+}
+
+`reader` is the door. `other` is not on the list and reads a file anyway,
+which is the case a prose "the only place" cannot report.

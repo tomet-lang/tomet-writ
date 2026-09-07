@@ -12,7 +12,7 @@ fn upward_dependency_is_reported() {
     assert_eq!(
         twrit_tests::check("upward-edge"),
         "crate-layering: upward dependency: mid (layer 1, mid) -> top (layer 2, top)\n\
-         1 writ, 1 rule, crate-layering: 1 violation (3 members), parser-purity: not declared\n"
+         1 writ, 1 rule, crate-layering: 1 violation (3 members)\n"
     );
 }
 
@@ -24,7 +24,7 @@ fn unclassified_member_is_reported() {
     assert_eq!(
         twrit_tests::check("unclassified"),
         "crate-layering: unclassified member: stray matches no layer in `layers`\n\
-         1 writ, 1 rule, crate-layering: 1 violation (2 members), parser-purity: not declared\n"
+         1 writ, 1 rule, crate-layering: 1 violation (2 members)\n"
     );
 }
 
@@ -35,7 +35,7 @@ fn ambiguous_member_names_both_layers() {
     assert_eq!(
         twrit_tests::check("ambiguous"),
         "crate-layering: ambiguous member: thing matches layer 1 (`thing*`) and layer 0 (`thing`)\n\
-         1 writ, 1 rule, crate-layering: 1 violation (1 member), parser-purity: not declared\n"
+         1 writ, 1 rule, crate-layering: 1 violation (1 member)\n"
     );
 }
 
@@ -46,7 +46,7 @@ fn the_floor_may_not_depend_on_a_member() {
     assert_eq!(
         twrit_tests::check("floor-depends"),
         "crate-layering: layer 0 depends on a workspace member: base -> helper\n\
-         1 writ, 1 rule, crate-layering: 1 violation (2 members), parser-purity: not declared\n"
+         1 writ, 1 rule, crate-layering: 1 violation (2 members)\n"
     );
 }
 
@@ -57,7 +57,7 @@ fn a_dev_dependency_may_reach_upward() {
     // seen honouring it, not just seen catching things.
     assert_eq!(
         twrit_tests::check("dev-dependency"),
-        "1 writ, 1 rule, crate-layering: ok (3 members), parser-purity: not declared\n"
+        "1 writ, 1 rule, crate-layering: ok (3 members)\n"
     );
 }
 
@@ -120,7 +120,7 @@ fn an_empty_layers_declaration_is_refused() {
 fn two_layer_declarations_are_refused() {
     assert_eq!(
         twrit_tests::check_err("layers-twice"),
-        "more than one rule guards `layers`; a layer order has to be one thing"
+        "more than one rule guards `layers` (crate-layering, crate-layering); a layer order has to be one thing"
     );
 }
 
@@ -160,7 +160,7 @@ fn an_unlisted_external_dependency_is_reported() {
     assert_eq!(
         twrit_tests::check("pure-external"),
         "parser-purity: core reaches an external crate not in `allow-external`: core -> outside\n\
-         1 writ, 1 rule, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+         1 writ, 1 rule, parser-purity: 1 violation (1 crate)\n"
     );
 }
 
@@ -172,7 +172,7 @@ fn an_external_reached_through_a_member_is_reported() {
     assert_eq!(
         twrit_tests::check("pure-closure"),
         "parser-purity: core reaches an external crate not in `allow-external`: inner -> outside\n\
-         1 writ, 1 rule, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+         1 writ, 1 rule, parser-purity: 1 violation (1 crate)\n"
     );
 }
 
@@ -185,7 +185,7 @@ fn a_forbidden_path_names_the_file_relative_to_the_root() {
     assert_eq!(
         twrit_tests::check("pure-forbidden"),
         "parser-purity: core names a forbidden path: std::fs in core/src/lib.rs\n\
-         1 writ, 1 rule, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+         1 writ, 1 rule, parser-purity: 1 violation (1 crate)\n"
     );
 }
 
@@ -194,7 +194,7 @@ fn a_pure_crate_that_does_not_exist_is_reported() {
     assert_eq!(
         twrit_tests::check("pure-not-a-member"),
         "parser-purity: `pure` names nope, which is not a workspace member\n\
-         1 writ, 1 rule, crate-layering: not declared, parser-purity: 1 violation (1 crate)\n"
+         1 writ, 1 rule, parser-purity: 1 violation (1 crate)\n"
     );
 }
 
@@ -223,7 +223,7 @@ fn a_forbidden_path_in_build_rs_is_missed() {
     // that may not touch the filesystem to touch it anyway.
     assert_eq!(
         twrit_tests::check("pure-build-rs"),
-        "1 writ, 1 rule, crate-layering: not declared, parser-purity: ok (1 crate)\n"
+        "1 writ, 1 rule, parser-purity: ok (1 crate)\n"
     );
 }
 
@@ -235,7 +235,7 @@ fn a_forbidden_path_in_an_internal_dependency_is_missed() {
     // One check trusts the crate, the other never looks at it.
     assert_eq!(
         twrit_tests::check("pure-dep-source"),
-        "1 writ, 1 rule, crate-layering: not declared, parser-purity: ok (1 crate)\n"
+        "1 writ, 1 rule, parser-purity: ok (1 crate)\n"
     );
 }
 
@@ -254,7 +254,7 @@ fn a_namespaced_rule_resolves_the_same() {
     assert_eq!(
         twrit_tests::check("rule-namespaced"),
         "crate-layering: upward dependency: mid (layer 1, mid) -> top (layer 2, top)\n\
-         1 writ, 1 rule, crate-layering: 1 violation (3 members), parser-purity: not declared\n"
+         1 writ, 1 rule, crate-layering: 1 violation (3 members)\n"
     );
 }
 
@@ -311,7 +311,7 @@ fn a_twrit_kind_this_tool_does_not_have_is_refused() {
         twrit_tests::check_err("rule-unknown-kind"),
         format!(
             "{}: `@rule(import-cycles)` names `twrit: cycles`, which this tool does not \
-             implement; it implements layers, pure",
+             implement; it implements layers, pure, door",
             twrit_tests::fixture("rule-unknown-kind").join(".writ.tmt").display()
         )
     );
@@ -329,8 +329,7 @@ fn a_guard_pointing_at_nothing_fails_the_check() {
     assert_eq!(
         twrit_tests::check("guard-kinds"),
         "renamed-away: guard names tests/src/gone.rs, which does not exist\n\
-         1 writ, 5 rules (1 unguarded), 1 dead guard, crate-layering: ok (1 member), \
-         parser-purity: not declared\n"
+         1 writ, 5 rules (1 unguarded), 1 dead guard, crate-layering: ok (1 member)\n"
     );
 }
 

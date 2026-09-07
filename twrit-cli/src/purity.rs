@@ -20,7 +20,7 @@ use anyhow::{Context, Result};
 use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
 use tomet_ast::Value;
 
-use crate::writ::{Rule, Writ, twrit_rules};
+use crate::writ::Rule;
 use crate::{Outcome, plural};
 
 /// One `pure` declaration.
@@ -82,11 +82,7 @@ fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
 /// `crate-layering` does: an empty violation list is what a guard that
 /// checked everything returns, and what one that checked nothing
 /// returns, and they are not the same answer.
-pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
-    let rules = twrit_rules(writs, "pure")?;
-    if rules.is_empty() {
-        return Ok(Outcome::NotDeclared);
-    }
+pub fn check(rule: &Rule, workspace_root: &Path) -> Result<Outcome> {
 
     let metadata = MetadataCommand::new()
         .manifest_path(workspace_root.join("Cargo.toml"))
@@ -95,7 +91,7 @@ pub fn check(writs: &[Writ], workspace_root: &Path) -> Result<Outcome> {
 
     let mut violations = Vec::new();
     let mut checked = 0;
-    for rule in &rules {
+    {
         let pure = Pure::read(rule)?;
         for dir in &pure.crates {
             check_one(&metadata, workspace_root, dir, &pure, &mut violations)?;
@@ -182,7 +178,7 @@ fn check_one(
 /// Text search, deliberately. Anything cleverer needs to parse Rust, and a
 /// crate that has no business touching the filesystem has no business
 /// writing `std::fs` in a comment either.
-fn grep_sources(workspace_root: &Path, dir: &str, needle: &str) -> Result<Vec<String>> {
+pub(crate) fn grep_sources(workspace_root: &Path, dir: &str, needle: &str) -> Result<Vec<String>> {
     let mut hits = Vec::new();
     let src = workspace_root.join(dir).join("src");
     if !src.is_dir() {
