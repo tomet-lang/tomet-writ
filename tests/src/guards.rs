@@ -340,3 +340,17 @@ fn a_dead_guard_is_counted_as_a_violation() {
     // and `check` is what CI runs.
     assert_eq!(twrit_tests::report("guard-kinds").violation_count(), 1);
 }
+
+
+#[test]
+fn an_allow_external_entry_nothing_reaches_is_reported() {
+    // The other direction of the allowlist. An entry outside the closure
+    // is not permissive -- it is a claim about this workspace that has
+    // stopped being true, and saying what is true is the entire reason
+    // the list is worth more than "no external dependencies".
+    assert_eq!(
+        twrit_tests::check("pure-unused-allow"),
+        "parser-purity: `allow-external` lists gone, which nothing under core reaches\n\
+         1 writ, 1 rule, parser-purity: 1 violation (1 crate)\n"
+    );
+}

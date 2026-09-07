@@ -111,6 +111,7 @@ fn check_one(
     pure: &Pure,
     violations: &mut Vec<String>,
 ) -> Result<()> {
+    let mut reached: std::collections::BTreeSet<String> = BTreeSet::new();
     let root = metadata.workspace_root.as_std_path();
     let package = metadata.workspace_packages().into_iter().find(|p| {
         p.manifest_path
@@ -131,30 +132,84 @@ fn check_one(
             .map(|p| p.name.as_str())
             .collect();
 
-        // The closure, not just the direct list: a dependency that stays
-        // internal is worth nothing if what *it* pulls in does not.
+        // The *resolved* closure, and through externals as well as
+        // members. Two ways to be wrong here, and this walk had both in
+        // turn.
+        //
+        // Stopping at the first external made it one level deep on that
+        // side: `serde` was seen and `serde_derive`, which `serde`
+        // brings, was not -- so an ability arriving two hops out went
+        // unreported, which is the whole thing the rule is for.
+        //
+        // Walking `Package::dependencies` instead has the opposite
+        // fault. Those are *declared* dependencies, optional and
+        // target-specific ones included, so the closure grows a
+        // wasm-only `bumpalo` that nothing here compiles. A crate that
+        // is never built cannot give the parser anything.
+        //
+        // `Resolve` is the graph cargo actually built, features
+        // resolved across the workspace. That last part matters and is
+        // not an over-approximation: `cargo tree -p tomet-parser` shows
+        // `hashbrown` without `ahash`, and `cargo tree --workspace`
+        // shows it with, because feature unification is per build and
+        // this repository builds with `--workspace`.
+        let resolve = metadata
+            .resolve
+            .as_ref()
+            .context("`cargo metadata` returned no resolved dependency graph")?;
+        let name_of = |id: &cargo_metadata::PackageId| {
+            metadata
+                .packages
+                .iter()
+                .find(|p| &p.id == id)
+                .map(|p| p.name.to_string())
+        };
+
         let mut seen = BTreeSet::new();
-        let mut queue = VecDeque::from([package.name.as_str()]);
-        while let Some(name) = queue.pop_front() {
-            if !seen.insert(name) {
+        let mut queue = VecDeque::from([package.id.clone()]);
+        while let Some(id) = queue.pop_front() {
+            if !seen.insert(id.clone()) {
                 continue;
             }
-            let Some(pkg) = metadata.packages.iter().find(|p| p.name.as_str() == name) else {
+            let Some(node) = resolve.nodes.iter().find(|n| n.id == id) else {
                 continue;
             };
-            for dep in &pkg.dependencies {
-                if dep.kind != DependencyKind::Normal {
+            let from = name_of(&id).unwrap_or_default();
+            for dep in &node.deps {
+                if !dep
+                    .dep_kinds
+                    .iter()
+                    .any(|k| k.kind == DependencyKind::Normal)
+                {
                     continue;
                 }
-                if members.contains(dep.name.as_str()) {
-                    queue.push_back(dep.name.as_str());
-                } else if !pure.allow_external.iter().any(|a| a == dep.name.as_str()) {
+                let Some(dep_name) = name_of(&dep.pkg) else {
+                    continue;
+                };
+                queue.push_back(dep.pkg.clone());
+                if members.contains(dep_name.as_str()) {
+                    continue;
+                }
+                if pure.allow_external.contains(&dep_name) {
+                    reached.insert(dep_name);
+                } else {
                     violations.push(format!(
-                        "{dir} reaches an external crate not in `allow-external`: {} -> {}",
-                        name, dep.name
+                        "{dir} reaches an external crate not in `allow-external`: {from} -> {dep_name}"
                     ));
                 }
             }
+        }
+    }
+
+    // The other direction. An entry nothing reaches is not a permission:
+    // it is a claim about this workspace that has stopped being true, and
+    // what makes an allowlist worth more than "no external dependencies"
+    // is precisely that it says what is true.
+    for entry in &pure.allow_external {
+        if !reached.contains(entry.as_str()) {
+            violations.push(format!(
+                "`allow-external` lists {entry}, which nothing under {dir} reaches"
+            ));
         }
     }
 

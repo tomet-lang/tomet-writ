@@ -160,6 +160,27 @@ files because that is what a CLI is, and listing every program under
 `allowed` leaves a list that permits almost everyone and therefore says
 almost nothing.
 
+## An allowlist is checked both ways
+
+`pure`'s `allow-external` names the external crates a pure crate may
+reach. An entry nothing reaches is reported too, because a dead entry is
+not a permission -- it is a claim about the workspace that stopped being
+true, and saying what is true is the whole reason the list beats "no
+external dependencies".
+
+The two directions hold each other. Make the closure walk shallow again
+and the reverse check lights up: fifteen entries look dead because
+nothing reaches them any more.
+
+And the closure is the *resolved* one, from `Resolve`, not
+`Package::dependencies`. Declared dependencies include optional and
+target-specific ones, so a wasm-only `bumpalo` joins a closure nothing
+here compiles; a crate that is never built cannot give anything an
+ability. `Resolve` also unifies features across the workspace, which is
+not an over-approximation but the answer: `cargo tree -p tomet-parser`
+shows `hashbrown` without `ahash`, `cargo tree --workspace` shows it
+with, and this repository builds with `--workspace`.
+
 ## What belongs in this tool
 
 `twrit` implements rule **kinds**. The writ supplies the **parameters**.
