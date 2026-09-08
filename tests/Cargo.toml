@@ -32,3 +32,8 @@ path = "src/list.rs"
 [[test]]
 name = "door"
 path = "src/door.rs"
+
+[[test]]
+name = "placement"
+path = "src/placement.rs"
+

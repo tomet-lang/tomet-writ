@@ -1,0 +1,15 @@
+@kind(writ)
+
+##[ placement-clean ]
+
+@rule(placement-clean){
+  guard: { twrit: placement }
+
+  placement: {
+    within: "docs"
+    allow: [
+      "spec/**/*.tmt",
+      "README.tmt"
+    ]
+  }
+}

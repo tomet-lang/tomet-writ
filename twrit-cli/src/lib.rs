@@ -12,6 +12,7 @@
 
 pub mod door;
 pub mod layering;
+pub mod placement;
 pub mod purity;
 pub mod writ;
 
@@ -178,7 +179,7 @@ pub fn plural(n: usize, noun: &str) -> String {
 ///
 /// Named here rather than only in the `vec!` below so a writ can be
 /// checked against it before anything runs.
-pub const KINDS: &[&str] = &["layers", "pure", "door"];
+pub const KINDS: &[&str] = &["layers", "pure", "door", "placement"];
 
 /// Kinds a repository may declare only once.
 ///
@@ -368,6 +369,7 @@ pub fn check(root: &Path) -> Result<Report> {
             "layers" => layering::check(rule, root)?,
             "pure" => purity::check(rule, root)?,
             "door" => door::check(rule, root)?,
+            "placement" => placement::check(rule, root)?,
             _ => unreachable!("checked against KINDS above"),
         };
         rules.push(RuleResult {
