@@ -1,0 +1,4 @@
+[book]
+title = "twrit docs"
+lang = "ja"
+dest = "dist"
