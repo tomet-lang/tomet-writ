@@ -20,6 +20,17 @@
   settings = {
     global.excludes = [ ]; # https://github.com/numtide/treefmt-nix/issues/171
 
+    formatter = {
+      tomet = {
+        command = "${tomet}/bin/tomet";
+        options = [
+          "format"
+          "-i"
+        ];
+        includes = [ "*.tmt" ];
+      };
+    };
+
     shfmt = {
       includes = [ "*.sh" ];
     };

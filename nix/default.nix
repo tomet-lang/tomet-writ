@@ -26,9 +26,12 @@ flake-parts.lib.mkFlake { inherit inputs; } {
       devShells.default = pkgs.callPackage ./dev.nix {
         inherit inputs craneLib;
         twrit = pkgs.callPackage ./pkgs/twrit.nix { inherit craneLib; };
-        tomet = inputs.tomet.packages.${pkgs.system}.tomet;
+        tomet = inputs.tomet.packages.${pkgs.stdenv.hostPlatform.system}.tomet;
+        tmtbook = inputs.tomet-book.packages.${pkgs.stdenv.hostPlatform.system}.tmtbook;
       };
 
-      treefmt = import ./formatter.nix;
+      treefmt = import ./formatter.nix {
+        tomet = inputs.tomet.packages.${pkgs.stdenv.hostPlatform.system}.tomet;
+      };
     };
 }

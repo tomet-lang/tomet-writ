@@ -13,8 +13,12 @@
     };
     crane.url = "github:ipetkov/crane";
 
-    #[ Dev ]
+    #[ Tool ]
     tomet.url = "github:tomet-lang/tomet";
+    tomet-book = {
+      url = "github:tomet-lang/tomet-book";
+      inputs.tomet.follows = "tomet";
+    };
   };
 
   outputs = inputs: import ./nix inputs;

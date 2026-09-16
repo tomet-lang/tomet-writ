@@ -6,6 +6,7 @@
 
   twrit,
   tomet,
+  tmtbook,
   ...
 }:
 let
@@ -26,6 +27,7 @@ mkShell rec {
   buildInputs = with pkgs; [
     twrit
     tomet
+    tmtbook
 
     #[ CMake ]
     cmake
