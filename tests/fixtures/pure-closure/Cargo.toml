@@ -5,5 +5,5 @@
 [workspace]
 resolver = "3"
 
-members = [ "core", "inner" ]
-exclude = [ "vendor" ]
+members = ["core", "inner"]
+exclude = ["vendor"]

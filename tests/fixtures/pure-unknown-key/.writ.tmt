@@ -8,8 +8,8 @@
   guard: { twrit: pure }
 
   pure: {
-    crates: [ "core" ]
-    colour: [ "red" ]
+    crates: list("core")
+    colour: list("red")
   }
 }
 

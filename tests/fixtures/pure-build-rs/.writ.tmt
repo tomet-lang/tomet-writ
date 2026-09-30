@@ -8,9 +8,9 @@
   guard: { twrit: pure }
 
   pure: {
-    crates: [ "core" ]
-    forbid: [ "std::fs" ]
-    allow-external: [ ]
+    crates: list("core")
+    forbid: list("std::fs")
+    allow-external: list()
   }
 }
 

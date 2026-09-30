@@ -248,16 +248,28 @@ pub fn twrit_rules(writs: &[Writ], kind: &str) -> Result<Vec<Rule>> {
     Ok(found)
 }
 
+/// Returns the slice of elements if `value` is either a sequence or a `list(...)` call.
+pub fn as_list(value: &Value) -> Option<&[Value]> {
+    match value {
+        Value::Seq(items) => Some(items.as_slice()),
+        Value::Call(name, args) if name == "list" => Some(args.as_slice()),
+        _ => None,
+    }
+}
+
 /// Reads a rule parameter's `{...}` as `key: [string, ...]` pairs.
 ///
 /// Returns an error rather than skipping anything it cannot read: a rule
 /// half-understood is worse than a rule that refuses to run, because the
 /// half it dropped is exactly where a violation would hide.
-pub fn string_list_map(entries: &[(String, Value)], what: &str) -> Result<Vec<(String, Vec<String>)>> {
+pub fn string_list_map(
+    entries: &[(String, Value)],
+    what: &str,
+) -> Result<Vec<(String, Vec<String>)>> {
     entries
         .iter()
         .map(|(key, value)| {
-            let Value::Seq(items) = value else {
+            let Some(items) = as_list(value) else {
                 anyhow::bail!("{what}'s `{key}` is not a list");
             };
             let strings = items

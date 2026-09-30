@@ -64,7 +64,7 @@ impl Pure {
 }
 
 fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
-    let Value::Seq(items) = value else {
+    let Some(items) = crate::writ::as_list(value) else {
         anyhow::bail!("`pure`'s `{key}` is not a list");
     };
     items
@@ -83,7 +83,6 @@ fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
 /// checked everything returns, and what one that checked nothing
 /// returns, and they are not the same answer.
 pub fn check(rule: &Rule, workspace_root: &Path) -> Result<Outcome> {
-
     let metadata = MetadataCommand::new()
         .manifest_path(workspace_root.join("Cargo.toml"))
         .exec()
@@ -121,7 +120,9 @@ fn check_one(
             .is_some_and(|d| d.to_string_lossy().replace('\\', "/") == dir)
     });
     let Some(package) = package else {
-        violations.push(format!("`pure` names {dir}, which is not a workspace member"));
+        violations.push(format!(
+            "`pure` names {dir}, which is not a workspace member"
+        ));
         return Ok(());
     };
 
@@ -250,7 +251,10 @@ pub(crate) fn grep_sources(workspace_root: &Path, dir: &str, needle: &str) -> Re
         let text = std::fs::read_to_string(entry.path())
             .with_context(|| format!("failed to read {}", entry.path().display()))?;
         if text.contains(needle) {
-            let rel = entry.path().strip_prefix(workspace_root).unwrap_or(entry.path());
+            let rel = entry
+                .path()
+                .strip_prefix(workspace_root)
+                .unwrap_or(entry.path());
             hits.push(rel.to_string_lossy().replace('\\', "/"));
         }
     }

@@ -1,23 +1,22 @@
 {
-  inputs,
   pkgs,
-  stdenv,
   mkShell,
-
+  fenix,
   twrit,
   tomet,
+  tomet-lsp,
   tmtbook,
   ...
 }:
 let
-  fenix = inputs.fenix.packages.${stdenv.hostPlatform.system};
-  rust-toolchain = fenix.combine [
+  rustToolchain = fenix.combine [
     (fenix.stable.withComponents [
       "cargo"
       "clippy"
       "rustc"
       "rust-src"
-      # "rust-analyzer"
+      "rustfmt"
+      "rust-analyzer"
     ])
     fenix.targets.wasm32-unknown-unknown.stable.rust-std
     fenix.targets.wasm32-wasip2.stable.rust-std
@@ -27,21 +26,21 @@ mkShell rec {
   buildInputs = with pkgs; [
     twrit
     tomet
+    tomet-lsp
     tmtbook
 
-    #[ CMake ]
+    #= Develop
+    #= Build
+    pkg-config
+    #== CMake
     cmake
     ninja
-
-    #[ Rust ]
-    rust-toolchain
+    #== Rust
+    rustToolchain
     cargo-edit
     cargo-outdated
     cargo-nextest
     wasm-bindgen-cli
-
-    #[ Misc ]
-    pkg-config
   ];
 
   PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
@@ -49,6 +48,6 @@ mkShell rec {
   ];
 
   shellHook = ''
-    echo "🦀 Rust"
+    echo "🧪 Rust Twrit"
   '';
 }

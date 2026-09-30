@@ -78,12 +78,16 @@ impl Door {
         anyhow::ensure!(!names.is_empty(), "`door` names no capability");
         // An empty `allowed` is legal and says something: nobody may have
         // this. Not an error, unlike an empty `names`, which asks nothing.
-        Ok(Door { names, allowed, within })
+        Ok(Door {
+            names,
+            allowed,
+            within,
+        })
     }
 }
 
 fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
-    let Value::Seq(items) = value else {
+    let Some(items) = crate::writ::as_list(value) else {
         anyhow::bail!("`door`'s `{key}` is not a list");
     };
     items

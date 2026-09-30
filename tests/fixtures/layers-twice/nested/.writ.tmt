@@ -11,6 +11,6 @@ property of the workspace, so there can only be one of it.
   guard: { twrit: layers }
 
   layers: {
-    0: [ "other" ]
+    0: list("other")
   }
 }

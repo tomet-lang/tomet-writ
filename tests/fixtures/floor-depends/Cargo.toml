@@ -3,4 +3,4 @@
 [workspace]
 resolver = "3"
 
-members = [ "base", "helper" ]
+members = ["base", "helper"]

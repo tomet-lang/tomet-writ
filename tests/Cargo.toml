@@ -15,25 +15,24 @@ autobenches = false
 path = "src/lib.rs"
 
 [[test]]
-name = "guards"
-path = "src/guards.rs"
+name = "door"
+path = "src/door.rs"
 
 [[test]]
-name = "writ"
-path = "src/writ.rs"
-
-[dependencies]
-twrit-cli = { path = "../twrit-cli" }
+name = "guards"
+path = "src/guards.rs"
 
 [[test]]
 name = "list"
 path = "src/list.rs"
 
 [[test]]
-name = "door"
-path = "src/door.rs"
-
-[[test]]
 name = "placement"
 path = "src/placement.rs"
 
+[[test]]
+name = "writ"
+path = "src/writ.rs"
+
+[dependencies]
+twrit-cli = { workspace = true }

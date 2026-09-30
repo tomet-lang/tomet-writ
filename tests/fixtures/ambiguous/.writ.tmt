@@ -10,8 +10,8 @@ Every workspace member belongs to exactly *one* layer.
   guard: { twrit: layers }
 
   layers: {
-    1: [ "thing*" ]
-    0: [ "thing" ]
+    1: list("thing*")
+    0: list("thing")
   }
 }
 

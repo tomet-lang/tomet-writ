@@ -6,7 +6,7 @@
 
 @rule(crate-layering){
   layers: {
-    0: [ "thing" ]
+    0: list("thing")
   }
 }
 

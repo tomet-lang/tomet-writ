@@ -11,7 +11,7 @@ workspace member -- its whole value is being arrived at independently.
   guard: { twrit: layers }
 
   layers: {
-    0: [ "base", "helper" ]
+    0: list("base", "helper")
   }
 }
 

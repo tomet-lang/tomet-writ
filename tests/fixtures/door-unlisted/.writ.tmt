@@ -8,8 +8,8 @@
   guard: { twrit: door }
 
   door: {
-    names: [ "std::fs" ]
-    allowed: [ "reader" ]
+    names: list("std::fs")
+    allowed: list("reader")
   }
 }
 

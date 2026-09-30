@@ -72,7 +72,7 @@ impl Placement {
 }
 
 fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
-    let Value::Seq(items) = value else {
+    let Some(items) = crate::writ::as_list(value) else {
         anyhow::bail!("`placement`'s `{key}` is not a list");
     };
     items
@@ -136,7 +136,9 @@ pub fn check(rule: &Rule, workspace_root: &Path) -> Result<Outcome> {
                     .strip_prefix(workspace_root)
                     .unwrap_or(rel_within)
                     .display();
-                violations.push(format!("{display_path}: unlisted file matches no allowed pattern"));
+                violations.push(format!(
+                    "{display_path}: unlisted file matches no allowed pattern"
+                ));
             }
         }
     }
@@ -144,8 +146,5 @@ pub fn check(rule: &Rule, workspace_root: &Path) -> Result<Outcome> {
     // Sort violations so output is deterministic
     violations.sort();
 
-    Ok(Outcome::checked(
-        plural(scanned_files, "file"),
-        violations,
-    ))
+    Ok(Outcome::checked(plural(scanned_files, "file"), violations))
 }

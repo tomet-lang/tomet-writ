@@ -8,7 +8,7 @@
   guard: { twrit: pure }
 
   pure: {
-    allow-external: [ ]
+    allow-external: list()
   }
 }
 

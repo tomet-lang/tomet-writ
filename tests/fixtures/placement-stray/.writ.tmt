@@ -7,9 +7,9 @@
 
   placement: {
     within: "docs"
-    allow: [
+    allow: list(
       "spec/**/*.tmt",
       "README.tmt"
-    ]
+)
   }
 }

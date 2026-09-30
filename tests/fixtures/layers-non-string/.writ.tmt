@@ -8,7 +8,7 @@
   guard: { twrit: layers }
 
   layers: {
-    1: [ 42 ]
+    1: list(42)
   }
 }
 

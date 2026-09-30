@@ -8,5 +8,5 @@
    them rather than each carrying a copy. */
 
 @config{
-  vocabularies: [ ".tomet/vocabularies/writ.vocabulary.tmt" ]
+  vocabularies: list(".tomet/vocabularies/writ.vocabulary.tmt")
 }

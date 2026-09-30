@@ -8,7 +8,7 @@
   guard: { twrit: layers }
 
   layers: {
-    low: [ "thing" ]
+    low: list("thing")
   }
 }
 

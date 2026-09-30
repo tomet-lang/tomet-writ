@@ -86,7 +86,10 @@ impl Report {
     /// writ says a test holds the rule and no test does, and a false
     /// statement in a writ is exactly what this tool is for.
     pub fn violation_count(&self) -> usize {
-        self.rules.iter().map(|r| r.outcome.violations().len()).sum::<usize>()
+        self.rules
+            .iter()
+            .map(|r| r.outcome.violations().len())
+            .sum::<usize>()
             + self.dead_guards.len()
     }
 
@@ -152,7 +155,10 @@ impl Report {
             census.push_str(&format!(" ({} unguarded)", self.unguarded_count));
         }
         if !self.dead_guards.is_empty() {
-            census.push_str(&format!(", {}", plural(self.dead_guards.len(), "dead guard")));
+            census.push_str(&format!(
+                ", {}",
+                plural(self.dead_guards.len(), "dead guard")
+            ));
         }
 
         out.push_str(&format!(
@@ -239,11 +245,7 @@ impl Listing {
             ));
         }
 
-        let unguarded = self
-            .rules
-            .iter()
-            .filter(|r| r.holder == "none")
-            .count();
+        let unguarded = self.rules.iter().filter(|r| r.holder == "none").count();
         let mut summary = format!(
             "\n{}, {}",
             plural(self.writ_count, "writ"),
@@ -282,7 +284,9 @@ pub fn list(root: &Path) -> Result<Listing> {
     for w in &writs {
         for rule in w.rules()? {
             let (holder, target, dead) = match &rule.guard {
-                writ::Guard::Twrit(kind) => ("twrit", kind.clone(), !KINDS.contains(&kind.as_str())),
+                writ::Guard::Twrit(kind) => {
+                    ("twrit", kind.clone(), !KINDS.contains(&kind.as_str()))
+                }
                 writ::Guard::Runs(cmd) => ("runs", cmd.clone(), false),
                 writ::Guard::Test(path) => ("test", path.clone(), false),
                 writ::Guard::None(why) => ("none", why.clone(), false),
@@ -333,13 +337,13 @@ pub fn check(root: &Path) -> Result<Report> {
         if let writ::Guard::Twrit(kind) = &rule.guard
             && !KINDS.contains(&kind.as_str())
         {
-                anyhow::bail!(
-                    "{}: `@rule({})` names `twrit: {kind}`, which this tool does not implement; \
+            anyhow::bail!(
+                "{}: `@rule({})` names `twrit: {kind}`, which this tool does not implement; \
                      it implements {}",
-                    rule.path.display(),
-                    rule.id,
-                    KINDS.join(", ")
-                );
+                rule.path.display(),
+                rule.id,
+                KINDS.join(", ")
+            );
         }
     }
 

@@ -28,8 +28,7 @@ pub fn check(name: &str) -> String {
 /// The same run, when a test needs the counts rather than the text.
 pub fn report(name: &str) -> twrit_cli::Report {
     let dir = fixture(name);
-    twrit_cli::check(&dir)
-        .unwrap_or_else(|e| panic!("fixture `{name}` failed to check: {e:#}"))
+    twrit_cli::check(&dir).unwrap_or_else(|e| panic!("fixture `{name}` failed to check: {e:#}"))
 }
 
 /// The path to one fixture workspace.

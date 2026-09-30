@@ -15,4 +15,4 @@ detached and simply vanish -- see `layers-bare`.
   guard: { twrit: layers }
 
   layers: {
-    0: [ "thing" ]
+    0: list("thing")

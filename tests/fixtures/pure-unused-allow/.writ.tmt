@@ -8,9 +8,9 @@
   guard: { twrit: pure }
 
   pure: {
-    crates: [ "core" ]
-    forbid: [ ]
-    allow-external: [ "outside", "gone" ]
+    crates: list("core")
+    forbid: list()
+    allow-external: list("outside", "gone")
   }
 }
 

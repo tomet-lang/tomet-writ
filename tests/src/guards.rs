@@ -81,7 +81,9 @@ fn a_rule_guarding_layers_without_the_parameter_is_refused() {
         twrit_tests::check_err("layers-no-group"),
         format!(
             "{}: `@rule(crate-layering)` guards `layers` but declares no `layers:` parameter",
-            twrit_tests::fixture("layers-no-group").join(".writ.tmt").display()
+            twrit_tests::fixture("layers-no-group")
+                .join(".writ.tmt")
+                .display()
         )
     );
 }
@@ -148,7 +150,9 @@ fn a_rule_with_no_group_is_refused() {
         format!(
             "{}: `@rule(crate-layering)` has no `{{...}}` group, so it declares neither a \
              guard nor parameters",
-            twrit_tests::fixture("layers-bare").join(".writ.tmt").display()
+            twrit_tests::fixture("layers-bare")
+                .join(".writ.tmt")
+                .display()
         )
     );
 }
@@ -268,7 +272,9 @@ fn a_rule_without_a_guard_is_refused() {
         format!(
             "{}: `@rule(crate-layering)` declares no `guard`; write `guard: {{ none: \"...\" }}` \
              when nothing holds it yet",
-            twrit_tests::fixture("rule-no-guard").join(".writ.tmt").display()
+            twrit_tests::fixture("rule-no-guard")
+                .join(".writ.tmt")
+                .display()
         )
     );
 }
@@ -282,7 +288,9 @@ fn an_unguarded_rule_must_say_why() {
         format!(
             "{}: `@rule(blueprint-shape)`'s `guard: none` has no reason; an unguarded rule says \
              why, so it cannot be read as an oversight",
-            twrit_tests::fixture("rule-none-no-reason").join(".writ.tmt").display()
+            twrit_tests::fixture("rule-none-no-reason")
+                .join(".writ.tmt")
+                .display()
         )
     );
 }
@@ -296,7 +304,9 @@ fn an_unknown_guard_holder_is_refused() {
         format!(
             "{}: `@rule(crate-layering)`'s guard holder `by` is not one of `twrit`, `runs`, \
              `test`, `none`",
-            twrit_tests::fixture("rule-unknown-guard").join(".writ.tmt").display()
+            twrit_tests::fixture("rule-unknown-guard")
+                .join(".writ.tmt")
+                .display()
         )
     );
 }
@@ -312,7 +322,9 @@ fn a_twrit_kind_this_tool_does_not_have_is_refused() {
         format!(
             "{}: `@rule(import-cycles)` names `twrit: cycles`, which this tool does not \
               implement; it implements layers, pure, door, placement",
-            twrit_tests::fixture("rule-unknown-kind").join(".writ.tmt").display()
+            twrit_tests::fixture("rule-unknown-kind")
+                .join(".writ.tmt")
+                .display()
         )
     );
 }
@@ -340,7 +352,6 @@ fn a_dead_guard_is_counted_as_a_violation() {
     // and `check` is what CI runs.
     assert_eq!(twrit_tests::report("guard-kinds").violation_count(), 1);
 }
-
 
 #[test]
 fn an_allow_external_entry_nothing_reaches_is_reported() {

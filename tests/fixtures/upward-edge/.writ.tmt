@@ -13,9 +13,9 @@ layers strictly below its own.
   guard: { twrit: layers }
 
   layers: {
-    2: [ "top" ]
-    1: [ "mid" ]
-    0: [ "base" ]
+    2: list("top")
+    1: list("mid")
+    0: list("base")
   }
 }
 
