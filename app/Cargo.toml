@@ -1,0 +1,16 @@
+[package]
+name = "twrit-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "twrit"
+path = "src/main.rs"
+
+[dependencies]
+twrit = { workspace = true }
+twrit-rust = { workspace = true }
+
+#= Crates.io
+anyhow = { workspace = true }
+clap = { workspace = true }

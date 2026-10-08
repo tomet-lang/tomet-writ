@@ -1,0 +1,27 @@
+//! `twrit-rust` -- Rust workspace rules enforcement (layering, door, purity).
+
+pub mod door;
+pub mod layering;
+pub mod purity;
+
+use twrit::Guard;
+
+pub fn rust_guards() -> Vec<Guard> {
+    vec![
+        Guard {
+            kind: "layers",
+            singleton: true,
+            check: layering::check,
+        },
+        Guard {
+            kind: "pure",
+            singleton: false,
+            check: purity::check,
+        },
+        Guard {
+            kind: "door",
+            singleton: false,
+            check: door::check,
+        },
+    ]
+}

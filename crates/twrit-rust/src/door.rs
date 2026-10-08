@@ -21,8 +21,9 @@ use cargo_metadata::MetadataCommand;
 use tomet_ast::Value;
 
 use crate::purity::grep_sources;
-use crate::writ::Rule;
-use crate::{Outcome, plural};
+use twrit::writ::Rule;
+use twrit::{Outcome, plural};
+
 
 /// What the capability is in source, and who is allowed it.
 struct Door {
@@ -87,7 +88,7 @@ impl Door {
 }
 
 fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
-    let Some(items) = crate::writ::as_list(value) else {
+    let Some(items) = twrit::writ::as_list(value) else {
         anyhow::bail!("`door`'s `{key}` is not a list");
     };
     items

@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 
-members = ["twrit-cli", "tests"]
+members = ["app", "crates/twrit", "crates/twrit-rust", "tests"]
 
 # The fixtures under `tests/fixtures/` are real Cargo workspaces -- the
 # guards read them through `cargo metadata`, so an approximation would
@@ -9,7 +9,7 @@ members = ["twrit-cli", "tests"]
 # excludes them so the outer workspace does not try to claim them.
 exclude = ["tests/fixtures"]
 
-default-members = ["twrit-cli"]
+default-members = ["app"]
 
 [workspace.package]
 version = "0.1.0"
@@ -17,7 +17,10 @@ edition = "2024"
 rust-version = "1.85"
 
 [workspace.dependencies]
-twrit-cli = { path = "twrit-cli" }
+twrit = { path = "crates/twrit" }
+twrit-rust = { path = "crates/twrit-rust" }
+twrit-cli = { path = "app" }
+
 
 #= Tomet
 tomet-ast = { git = "https://github.com/tomet-lang/tomet.git" }

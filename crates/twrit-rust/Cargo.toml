@@ -1,0 +1,15 @@
+[package]
+name = "twrit-rust"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+twrit = { workspace = true }
+
+#= Tomet
+tomet-ast = { workspace = true }
+
+#= Crates.io
+anyhow = { workspace = true }
+cargo_metadata = { workspace = true }
+ignore = { workspace = true }

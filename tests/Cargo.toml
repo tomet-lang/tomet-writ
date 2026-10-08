@@ -35,4 +35,6 @@ name = "writ"
 path = "src/writ.rs"
 
 [dependencies]
-twrit-cli = { workspace = true }
+twrit = { workspace = true }
+twrit-rust = { workspace = true }
+anyhow = { workspace = true }

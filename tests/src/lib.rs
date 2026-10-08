@@ -16,6 +16,13 @@
 
 use std::path::PathBuf;
 
+fn all_guards() -> Vec<twrit::Guard> {
+    let mut guards = twrit_rust::rust_guards();
+    guards.push(twrit::placement_guard());
+    guards
+}
+
+
 /// Runs `check` over `tests/fixtures/<name>`, returning what the CLI
 /// would have printed.
 ///
@@ -26,9 +33,10 @@ pub fn check(name: &str) -> String {
 }
 
 /// The same run, when a test needs the counts rather than the text.
-pub fn report(name: &str) -> twrit_cli::Report {
+pub fn report(name: &str) -> twrit::Report {
     let dir = fixture(name);
-    twrit_cli::check(&dir).unwrap_or_else(|e| panic!("fixture `{name}` failed to check: {e:#}"))
+    let guards = all_guards();
+    twrit::check(&dir, &guards).unwrap_or_else(|e| panic!("fixture `{name}` failed to check: {e:#}"))
 }
 
 /// The path to one fixture workspace.
@@ -49,7 +57,8 @@ pub fn fixture(name: &str) -> PathBuf {
 /// violation would hide.
 pub fn check_err(name: &str) -> String {
     let dir = fixture(name);
-    match twrit_cli::check(&dir) {
+    let guards = all_guards();
+    match twrit::check(&dir, &guards) {
         Ok(report) => panic!(
             "fixture `{name}` was expected to fail, but printed:\n{}",
             report.render()
@@ -61,7 +70,8 @@ pub fn check_err(name: &str) -> String {
 /// The listing `twrit list` would print for one fixture.
 pub fn list(name: &str) -> String {
     let dir = fixture(name);
-    twrit_cli::list(&dir)
+    let guards = all_guards();
+    twrit::list(&dir, &guards)
         .unwrap_or_else(|e| panic!("fixture `{name}` failed to list: {e:#}"))
         .render()
 }

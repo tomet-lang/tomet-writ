@@ -1,5 +1,5 @@
 //! The `twrit` command. Argument handling and an exit code; the work is
-//! in the library beside this file.
+//! in the libraries (`twrit`, `twrit-rust`).
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -39,10 +39,18 @@ fn main() -> ExitCode {
     }
 }
 
+fn all_guards() -> Vec<twrit::Guard> {
+    let mut guards = twrit_rust::rust_guards();
+    guards.push(twrit::placement_guard());
+    guards
+}
+
+
 fn run(command: Command) -> anyhow::Result<ExitCode> {
+    let guards = all_guards();
     Ok(match command {
         Command::Check { path } => {
-            let report = twrit_cli::check(&path)?;
+            let report = twrit::check(&path, &guards)?;
             print!("{}", report.render());
             if report.violation_count() == 0 {
                 ExitCode::SUCCESS
@@ -54,7 +62,7 @@ fn run(command: Command) -> anyhow::Result<ExitCode> {
         // and `check` is where a finding fails a run, so this exits zero
         // whatever it prints.
         Command::List { path } => {
-            print!("{}", twrit_cli::list(&path)?.render());
+            print!("{}", twrit::list(&path, &guards)?.render());
             ExitCode::SUCCESS
         }
     })

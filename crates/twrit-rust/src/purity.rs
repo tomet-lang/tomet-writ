@@ -20,8 +20,9 @@ use anyhow::{Context, Result};
 use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
 use tomet_ast::Value;
 
-use crate::writ::Rule;
-use crate::{Outcome, plural};
+use twrit::writ::Rule;
+use twrit::{Outcome, plural};
+
 
 /// One `pure` declaration.
 struct Pure {
@@ -64,7 +65,7 @@ impl Pure {
 }
 
 fn strings(key: &str, value: &Value) -> Result<Vec<String>> {
-    let Some(items) = crate::writ::as_list(value) else {
+    let Some(items) = twrit::writ::as_list(value) else {
         anyhow::bail!("`pure`'s `{key}` is not a list");
     };
     items

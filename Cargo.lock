@@ -903,25 +903,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "twrit"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ignore",
+ "tomet-ast",
+ "tomet-load",
+ "tomet-semantics",
+]
+
+[[package]]
 name = "twrit-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "cargo_metadata",
  "clap",
+ "twrit",
+ "twrit-rust",
+]
+
+[[package]]
+name = "twrit-rust"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cargo_metadata",
  "ignore",
  "tomet-ast",
- "tomet-load",
- "tomet-parser",
- "tomet-semantics",
- "tomet-tree",
+ "twrit",
 ]
 
 [[package]]
 name = "twrit-tests"
 version = "0.1.0"
 dependencies = [
- "twrit-cli",
+ "anyhow",
+ "twrit",
+ "twrit-rust",
 ]
 
 [[package]]
