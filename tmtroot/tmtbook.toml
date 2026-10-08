@@ -1,4 +1,8 @@
 [book]
 title = "twrit docs"
-lang = "ja"
+lang = "en"
 dest = "dist"
+
+[build]
+base = "/tomet-writ"
+kinds = ["*", "!config", "!index"]

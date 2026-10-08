@@ -1,3 +1,46 @@
+@config(
+  export: {
+    type: commonmark,
+    path: "README.md"
+  }
+)
+@meta{
+  id: doc-readme,
+  lang: en
+}
+
+${macro.generated_by(self.path)}
+
 =[ Twrit ]
 
-プロジェクト規約
+Rule enforcement toolchain for normative repository policies in the Tomet ecosystem.
+
+==[ Overview ]
+
+`twrit` enforces the architectural and stylistic rules a repository writes down in its `.writ.tmt` files. A rule nobody checks is a wish; this tool makes written rules fail loudly in CI instead of drifting quietly out of true.
+
+A *writ* is an author-owned normative document, scoped to its directory and inherited downward similar to `.gitignore`. Entries carry **id / rule / why / guard**, ensuring every policy is auditable and verifiable.
+
+==[ Workspace Layout ]
+
+-| @dir(app) (`twrit-cli`) -- Main CLI binary (`twrit`).
+-| @dir(crates/twrit) (`twrit`) -- Core parser, validator, and rule execution engine.
+-| @dir(crates/twrit-rust) (`twrit-rust`) -- Built-in guards for Cargo workspaces and Rust crates.
+-| @dir(tests) -- Comprehensive integration tests and workspace fixtures.
+
+==[ Building and Testing ]
+
+=== Build workspace
+```bash
+cargo build
+```
+
+=== Run tests
+```bash
+cargo test --workspace
+```
+
+=== Check repository rules
+```bash
+cargo run -p twrit-cli -- check .
+```
