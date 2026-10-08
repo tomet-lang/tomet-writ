@@ -28,6 +28,8 @@ mkShell rec {
     tomet
     tomet-lsp
     tmtbook
+    deno
+    just
 
     #= Develop
     #= Build
