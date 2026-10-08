@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: unclassified fixture ]
+=[ Writ: unclassified fixture ]
 
-##[ crate-layering ]
+==[ crate-layering ]
 
 Every workspace member belongs to exactly one layer.
 

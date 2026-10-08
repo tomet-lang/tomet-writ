@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: rule-unknown-kind fixture ]
+=[ Writ: rule-unknown-kind fixture ]
 
-##[ import-cycles ]
+==[ import-cycles ]
 
 @rule(import-cycles){
   guard: { twrit: cycles }

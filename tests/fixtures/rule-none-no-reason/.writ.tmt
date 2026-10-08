@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: rule-none-no-reason fixture ]
+=[ Writ: rule-none-no-reason fixture ]
 
-##[ blueprint-shape ]
+==[ blueprint-shape ]
 
 @rule(blueprint-shape){
   guard: { none: "" }

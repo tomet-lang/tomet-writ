@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: rule-no-guard fixture ]
+=[ Writ: rule-no-guard fixture ]
 
-##[ crate-layering ]
+==[ crate-layering ]
 
 @rule(crate-layering){
   layers: {

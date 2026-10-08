@@ -339,9 +339,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.189"
+version = "0.2.190"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
 
 [[package]]
 name = "log"
@@ -390,9 +390,9 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "powerfmt"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391"
+checksum = "4a6394b9e965e73d0a289ee54f589087e2c676aedf60885baf52c76b771e4958"
 
 [[package]]
 name = "ppv-lite86"
@@ -671,7 +671,7 @@ checksum = "9e1c906769ad99c88eaa54e728060edef082f8e358ff32030cb7c7d315e81109"
 [[package]]
 name = "tomet-ast"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "serde",
  "tomet-cst",
@@ -681,7 +681,7 @@ dependencies = [
 [[package]]
 name = "tomet-compute"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "time",
  "tomet-ast",
@@ -693,7 +693,7 @@ dependencies = [
 [[package]]
 name = "tomet-config"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-parser",
@@ -704,7 +704,7 @@ dependencies = [
 [[package]]
 name = "tomet-cst"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "rowan",
 ]
@@ -712,7 +712,7 @@ dependencies = [
 [[package]]
 name = "tomet-field-utils"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "nanoid",
  "tomet-config",
@@ -722,7 +722,7 @@ dependencies = [
 [[package]]
 name = "tomet-indexer"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "ignore",
  "tomet-ast",
@@ -735,7 +735,7 @@ dependencies = [
 [[package]]
 name = "tomet-lexer"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-cst",
@@ -744,7 +744,7 @@ dependencies = [
 [[package]]
 name = "tomet-load"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-config",
@@ -760,7 +760,7 @@ dependencies = [
 [[package]]
 name = "tomet-parser"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-cst",
@@ -773,7 +773,7 @@ dependencies = [
 [[package]]
 name = "tomet-resolver"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-parser",
@@ -784,7 +784,7 @@ dependencies = [
 [[package]]
 name = "tomet-search"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-compute",
@@ -795,7 +795,7 @@ dependencies = [
 [[package]]
 name = "tomet-semantics"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "serde_json",
  "serde_yaml",
@@ -807,7 +807,7 @@ dependencies = [
 [[package]]
 name = "tomet-style"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-config",
@@ -819,7 +819,7 @@ dependencies = [
 [[package]]
 name = "tomet-transform"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-compute",
@@ -833,7 +833,7 @@ dependencies = [
 [[package]]
 name = "tomet-tree"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
 ]
@@ -841,7 +841,7 @@ dependencies = [
 [[package]]
 name = "tomet-vault"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "tomet-ast",
  "tomet-compute",
@@ -895,7 +895,7 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 [[package]]
 name = "tove"
 version = "0.1.0"
-source = "git+https://github.com/tomet-lang/tomet.git#beb73a80ae05b74a66ee11047588a96790d5e63b"
+source = "git+https://github.com/tomet-lang/tomet.git#b8d8a0994a038d6ea1d58c57ce88ea79c975f4cc"
 dependencies = [
  "serde",
  "tomet-ast",
@@ -950,9 +950,9 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "1.26.1"
+version = "1.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ef6dac1e96601b4fb3acccccff2139741fcb757cb9a36089bf5be91cfb285ce"
+checksum = "97277d36b9c3ace13e58fa6e753f8b0bbbf302a18dd193240d70f9e29681059a"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
@@ -1058,18 +1058,18 @@ checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
 
 [[package]]
 name = "zerocopy"
-version = "0.8.59"
+version = "0.8.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6df92bf3d9227be3d53173901ddbffac2babc27ae50f397776ffd6dc33f800cb"
+checksum = "879fb705ce98c32e41ebdb970fbe1204f8492423b314c6ab0354c3e7b5542866"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.59"
+version = "0.8.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac4f328cf2f05d084e496c3e9c3f33ed0a183656a16e1fcec4d464d8373aec82"
+checksum = "708882a28301d604fa039cc7727607a98d04c4b86dc76ec9cc683f805d709759"
 dependencies = [
  "proc-macro2",
  "quote",

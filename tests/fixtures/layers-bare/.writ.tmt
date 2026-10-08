@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: layers-bare fixture ]
+=[ Writ: layers-bare fixture ]
 
-##[ crate-layering ]
+==[ crate-layering ]
 
 @rule(crate-layering)
 

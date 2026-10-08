@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: pure-forbidden fixture ]
+=[ Writ: pure-forbidden fixture ]
 
-##[ parser-purity ]
+==[ parser-purity ]
 
 @rule(parser-purity){
   guard: { twrit: pure }

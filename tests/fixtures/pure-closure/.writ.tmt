@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: pure-closure fixture ]
+=[ Writ: pure-closure fixture ]
 
-##[ parser-purity ]
+==[ parser-purity ]
 
 @rule(parser-purity){
   guard: { twrit: pure }

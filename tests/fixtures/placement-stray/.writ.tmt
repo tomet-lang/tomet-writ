@@ -1,6 +1,6 @@
 @kind(writ)
 
-##[ placement-stray ]
+==[ placement-stray ]
 
 @rule(placement-stray){
   guard: { twrit: placement }

@@ -1,6 +1,6 @@
 @kind(writ)
 
-#[ Writ: unparseable fixture ]
+=[ Writ: unparseable fixture ]
 
 A writ that cannot be parsed at all. The closing `}` is missing.
 
@@ -9,7 +9,7 @@ live inside the entry, so losing one takes the group's closer with it and
 the file stops parsing. It used to be possible for a declaration to come
 detached and simply vanish -- see `layers-bare`.
 
-##[ crate-layering ]
+==[ crate-layering ]
 
 @rule(crate-layering){
   guard: { twrit: layers }

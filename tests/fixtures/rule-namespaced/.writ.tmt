@@ -1,11 +1,11 @@
 @kind(writ)
 
-#[ Writ: rule-namespaced fixture ]
+=[ Writ: rule-namespaced fixture ]
 
 Three layers and one edge that runs the wrong way, with the rule written
 in its namespaced spelling.
 
-##[ crate-layering ]
+==[ crate-layering ]
 
 Every workspace member belongs to exactly one layer, and depends only on
 layers strictly below its own.

@@ -168,16 +168,11 @@ pub fn discover(root: &Path) -> Result<Vec<Writ>> {
 impl Writ {
     /// Every `@rule` this writ declares, in document order.
     pub fn rules(&self) -> Result<Vec<Rule>> {
-        self.doc
-            .blocks
-            .iter()
-            .filter_map(|block| match block {
-                Block::Element(el) if self.is_rule(el) => Some(el),
-                _ => None,
-            })
-            .map(|el| self.read_rule(el))
-            .collect()
+        let mut elements = Vec::new();
+        collect_rule_elements(&self.doc.blocks, &|el| self.is_rule(el), &mut elements);
+        elements.into_iter().map(|el| self.read_rule(el)).collect()
     }
+
 
     /// Whether `el` is a `@rule`, by resolution rather than by spelling.
     ///
@@ -283,3 +278,30 @@ pub fn string_list_map(
         })
         .collect()
 }
+
+fn collect_rule_elements<'a>(
+    blocks: &'a [Block],
+    is_rule: &impl Fn(&Element) -> bool,
+    out: &mut Vec<&'a Element>,
+) {
+    for block in blocks {
+        match block {
+            Block::Element(el) => {
+                if is_rule(el) {
+                    out.push(el);
+                }
+                if let Some(content) = &el.content {
+                    collect_rule_elements(content, is_rule, out);
+                }
+                if let Some(children) = &el.children {
+                    collect_rule_elements(children, is_rule, out);
+                }
+            }
+            Block::Section(sec) => {
+                collect_rule_elements(&sec.blocks, is_rule, out);
+            }
+            Block::Paragraph(_) => {}
+        }
+    }
+}
+

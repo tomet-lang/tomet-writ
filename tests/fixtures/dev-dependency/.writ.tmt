@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: dev-dependency fixture ]
+=[ Writ: dev-dependency fixture ]
 
-##[ crate-layering ]
+==[ crate-layering ]
 
 Dev-dependencies are exempt. A crate may reach upward in
 `[dev-dependencies]` to get something to test itself against, because

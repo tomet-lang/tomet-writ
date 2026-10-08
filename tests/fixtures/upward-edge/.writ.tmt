@@ -1,10 +1,10 @@
 @kind(writ)
 
-#[ Writ: upward-edge fixture ]
+=[ Writ: upward-edge fixture ]
 
 Three layers and one edge that runs the wrong way.
 
-##[ crate-layering ]
+==[ crate-layering ]
 
 Every workspace member belongs to exactly one layer, and depends only on
 layers strictly below its own.

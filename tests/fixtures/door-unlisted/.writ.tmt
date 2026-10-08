@@ -1,8 +1,8 @@
 @kind(writ)
 
-#[ Writ: door-unlisted fixture ]
+=[ Writ: door-unlisted fixture ]
 
-##[ file-io ]
+==[ file-io ]
 
 @rule(file-io){
   guard: { twrit: door }
